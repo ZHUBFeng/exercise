@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Minesweeper</title>
+  <style>
+    body, html {
+      margin: 0;
+      background-color: #222;
+    }
+    .wrapper {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      margin: auto;
+      width: 750px;
+      height: 750px;
+    }
+    .header {
+      position: relative;
+      margin: 30px auto 0;
+      height: 60px;
+      background-color: #4a752c;
+      font-size: 16px;
+      color: #fff;
+    }
+    .level,
+    .message {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 0 4px 4px;
+    }
+    .header .level {
+      left: 20px;
+      font-size: 15px;
+      outline: none;
+    }
+    .header .message {
+      transform: translateX(-50%) translateY(-50%);
+      top: 50%;
+      left: 50%;
+      font-size: 0;
+    }
+    .message span {
+      font-size: 20px;
+      display: inline-block;
+      height: 25px;
+      width: 25px;
+    }
+    .message i {
+      background-size: cover;
+      width: 35px;
+      height: 35px;
+      display: inline-block;
+      vertical-align: bottom;
+    }
+    .message i:first-child {
+      background-image: url(./imgs/flag_icon.png);
+    }
+    .message i:last-of-type {
+      background-image: url(./imgs/clock_icon.png);
+      margin: 0 6px 0 15px;
+    }
+
+    #board {
+      margin: auto;
+      border-collapse: collapse;
+      background-color: #aad751;
+    }
+    #board td {
+      box-sizing: border-box;
+      padding: 0;
+      position: relative;
+      font-size: 0;
+    }
+    #board tr:nth-child(2n+1) td:nth-child(2n+1)::before{
+      content: '';
+      display: inline-block;
+      vertical-align: middle;
+      background-color: rgb(0,0,0,0.05);
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    #board tr:nth-child(2n) td:nth-child(2n)::before{
+      content: '';
+      display: inline-block;
+      background-color: rgb(0,0,0,0.05);
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    .easy td,
+    .easy td::before {
+      height: 45px;
+      width: 45px;
+    }
+    .medium td,
+    .medium td::before {
+      height: 30px;
+      width: 30px;
+    }
+    .hard td,
+    .hard td::before {
+      height: 28px;
+      width: 28px;
+    }
+    #board .mine {
+      background: center/cover url(./imgs/地雷.png);
+    }
+    
+    #board .turn {
+      background-color: #e5c29f;
+    }
+    #board .mCount {
+      text-align: center;
+      background-color: #e5c29f;
+      font-size: 21px;
+      font-weight: 1000;
+      color: #666;
+    }
+    #board .mayMine {
+      background: url(./imgs/flag_plant.png);
+      background-size: cover;
+    }
+    #board.easy .mayMine {
+      background-position: 5px 0px;
+      animation: bgiEasy .2s steps(9) forwards;
+    }
+    @keyframes bgiEasy {
+      to {
+        background-position: 5px -415px;
+      }
+    }
+    #board.medium .mayMine {
+      background-position: 3px 0px;
+      animation: bgiMedium .2s steps(9) forwards;
+    }
+    @keyframes bgiMedium {
+      to {
+        background-position: 3px -277px;
+      }
+    }
+    #board.hard .mayMine {
+      background-position: 2px 0px;
+      animation: bgiHard .2s steps(9) forwards;
+    }
+    @keyframes bgiHard {
+      to {
+        background-position: 2px -255px;
+      }
+    }
+    .circle::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 100%;
+      background-color: rgb(255, 0, 0, 0.6);
+      right:0;
+      left:0;
+      top:0;
+      bottom:0;
+      margin:auto;
+      transform:  scale3d(0, 0, 0);
+      animation: circle 0.2s forwards;
+    }
+    @keyframes circle {
+      to {
+        transform:  scale3d(1, 1, 1);
+      }
+    }
+    .over {
+      cursor: pointer;
+      box-shadow: 0 0 999px 999px rgb(0,0,0,0.7);
+      display: none;
+      font-size: 18px;
+      position: absolute;
+      width: 300px;
+      height: 190px;
+      text-align: center;
+      left: 50%;
+      top: 20%;
+      transform: translateX(-50%);
+      background: no-repeat top/contain url(./imgs/lose_screen.png) #4a752c;
+    }
+    .over i{
+      cursor: pointer;
+      background:no-repeat center/cover url(./imgs/refresh_white_24dp.png);
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      position: absolute;
+      bottom: 8px;
+      left: 22%;
+      z-index: 10;
+    }
+    .over button {
+      cursor: pointer;
+      position: absolute;
+      background-color: #4a752c;
+      border: none;
+      outline: none;
+      width: 150px;
+      bottom: 12px;
+      left: 30%;
+      font: 400 20px Roboto,Arial,sans-serif;
+      color: #fff;
+    }
+  
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+
+    <div class="header">
+      <select class="level">
+        <option value="easy">简单</option>
+        <option value="medium">中等</option>
+        <option value="hard">困难</option>
+      </select>
+
+      <div class="message">
+        <i></i>
+        <span class="leftMine"></span>
+        <i></i>
+        <span class="time">000</span>
+      </div>
+    </div>
+
+    <table id="board" class="easy"></table>
+
+    <div class="over">
+      <i></i>
+      <button>再试一次吧</button>
+    </div>
+
+  </div>
+
+
+  <script>
+    class minesweeper {
+      constructor(width = 10, height = 8, mine = 10) {
+        this.width = width
+        this.height = height
+
+        this.board = new Array(height).fill(0).map(row => new Array(width).fill('E'))
+
+        this.mine = mine
+        
+        this.generateMine(this.mine)
+      }
+
+      generateMine(mine) {
+        var i = 0
+        while(true) {
+          var x = Math.floor(Math.random() * this.height)
+          var y = Math.floor(Math.random() * this.width)
+          if(this.board[x][y] == 'E') {
+            this.board[x][y] = 'M'
+            i++
+            if(i == mine) {
+              break
+            }
+          }else {
+            continue
+          }
+        }
+      }
+
+      updateBoard(x, y) {
+        if (this.board[x][y] == 'M') {
+          this.board[x][y] = 'X'
+          return
+        }
+
+        var mineCount = 0
+        //计算周围的雷数
+        for (var i = x - 1; i <= x + 1; i++) {
+          for (var j = y - 1; j <= y + 1; j++) {
+            if (this.board[i] && (this.board[i][j] == 'M' || this.board[i][j] == 'MM')) {
+              mineCount++
+            }
+          }
+        }
+        if (mineCount) {
+          this.board[x][y] = mineCount.toString()
+        }
+
+        if (/\d+/.test(this.board[x][y])) {
+          return
+        }
+
+        for (var m = x - 1; m <= x + 1; m++) {
+          for (var n = y - 1; n <= y + 1; n++) {
+            if (this.board[m] && this.board[m][n] == 'E') {
+              this.board[m][n] = 'B'
+              this.updateBoard(m, n)
+            } else if (/\d+/.test(this.board[x][y])) {
+              continue
+            }
+          }
+        }
+      }
+
+      toString() {
+        return '\n' + this.board.map(it => it.join('  ')).join('\n')
+      }
+    }
+
+    var m = new minesweeper()
+    var board = document.querySelector('#board')
+    var leftMine = document.querySelector('.leftMine')
+
+    var time = document.querySelector('.time')
+    var lose = false
+    var interval
+
+
+    init()
+
+    //计时
+    function setTime() {
+      var i = 0
+      clearInterval(interval)
+      document.querySelector('.time').textContent = '000'
+      interval = setInterval(() => {
+      time.textContent = (++i).toString().padStart(3, 0)
+        if(i == 999) {
+          clearInterval(interval)
+        }
+      }, 1000);
+    }
+
+    //添加点击事件
+    //左键
+    board.addEventListener('click', function(e) {
+      if(e.target.matches('#board td') && !lose) {
+
+        var [cx, cy] = getPos(e.target)
+        if(m.board[cx][cy].length == 2) {
+          e.preventDefault()
+        } else {
+          m.updateBoard(cx, cy)
+      
+          if(m.board[cx][cy] == 'X') {
+            e.target.classList.add('mine')
+            gameOver()
+          }
+          addClass()
+        }
+
+        if(test()) {
+          win()
+        }
+      }
+    })
+
+    //中键
+    board.addEventListener('mousedown', function(e) {
+      e.preventDefault()
+      var [cx, cy] = getPos(e.target)
+
+      if(e.which == 2 && /\d+/.test(m.board[cx][cy]) && !lose) {
+        //计算标记的雷数
+        var count = 0
+
+        for(var s = cx - 1; s <= cx + 1; s++) {
+          for(var v = cy - 1; v <= cy + 1; v++) {
+            if(m.board[s] && m.board[s][v] && m.board[s][v].length == 2) {
+              count++
+            }
+          }
+        }
+        
+        if(count == m.board[cx][cy]) {
+          for(var i = cx - 1; i <= cx + 1; i++) {
+            for(var j = cy - 1; j <= cy + 1; j++) {
+              if(m.board[i]) {
+                if(m.board[i][j] == 'E') {
+                  var node = getNode(i, j)
+                  node.click()
+                }else if(m.board[i][j] == 'M') {
+                  var falg = true
+                  m.board[i][j] = 'XX'
+                }
+              }
+            }
+          }
+
+          if(test()) {
+            win()
+          }
+
+          if(falg) {
+            gameOver()
+          }
+        }
+      }
+    })
+
+    //右键
+    board.addEventListener('contextmenu', function(e) {
+      if(e.target.matches('#board td') && !lose) {
+        e.preventDefault()
+
+        if(e.target.className !== 'turn' && e.target.className !== 'mCount') {
+          var [cx, cy] = getPos(e.target)
+        
+          var node = getNode(cx, cy)
+          var list = Array.from(node.classList)
+          if(list.indexOf('mayMine') !== -1) {
+            node.classList.remove('mayMine')
+            leftMine.textContent++
+            m.board[cx][cy] = m.board[cx][cy].slice(0, 1)
+          }else {
+            node.classList.add('mayMine')
+            leftMine.textContent--
+            m.board[cx][cy] += 'M'
+          }
+
+          if(test()) {
+            win()
+          }
+        }
+      }
+    })
+
+    var level = document.querySelector('.header .level')
+    level.onchange = function(e) {
+      initLevel()
+    }
+
+
+    function init() {
+      var mineCount = 0
+      var width = m.width
+      var height = m.height
+      lose = false
+
+      //初始化界面
+      var tbody = document.createElement('tbody')
+      for(var i = 0; i < height; i++) {
+        var tr = document.createElement('tr')
+        for(var j = 0; j < width; j++) {
+          var td = document.createElement('td')
+          tr.appendChild(td)
+        }
+        tbody.appendChild(tr)
+      }
+      board.appendChild(tbody)
+
+      leftMine.textContent = m.mine
+
+      var header = document.querySelector('.header')
+      header.style.width = board.offsetWidth + 'px'
+
+      setTime()
+    }
+
+    function initLevel() {
+      var select = document.querySelector('.level')
+      var optionIdx = select.selectedIndex
+      var optionVal = select.options[optionIdx].value 
+      
+      if(optionVal == 'medium') {
+        m = new minesweeper(18, 14, 40)
+        board.className = 'medium'
+      }else if(optionVal == 'hard') {
+        m = new minesweeper(24, 20, 99)
+        board.className = 'hard'
+      }else if(optionVal == 'easy') {
+        m = new minesweeper()
+        board.className = 'easy'
+      }
+
+      document.querySelector('#board tbody').remove()
+      init()
+    }
+
+    //为 B mCount 添加class 
+    function addClass() {
+      var width = m.width
+      var height = m.height
+
+      for(var i = 0; i < height; i++) {
+        for(var j = 0; j < width; j++) {
+
+          if(m.board[i][j] == 'B') {
+            var node = getNode(i, j)
+            node.classList.add('turn')
+          }else if(/\d+/.test(m.board[i][j])){
+            var node = getNode(i, j)
+            var classList = Array.from(node.classList)
+
+            if(classList.indexOf('mayMine') == -1) {
+              node.classList.add('mCount')
+              node.textContent = +m.board[i][j]
+            }
+          }
+
+        }
+      }
+    }
+
+    function getPos(node) {
+      var tbody = document.querySelector('#board tbody')
+      var children = Array.from(tbody.children)
+      var parent = node.parentElement
+      var cells = Array.from(parent.children)
+
+      var x = children.indexOf(parent)
+      var y = cells.indexOf(node)
+
+      return [x, y]
+    }
+
+    function getNode(x, y) {
+      var tbody = document.querySelector('#board tbody')
+      var child = Array.from(tbody.children)[x]
+
+      var node = Array.from(child.children)[y]
+
+      return node
+    }
+    
+    function gameOver() {
+      clearInterval(interval)
+      lose = true
+      
+      var width = m.width
+      var height = m.height
+
+      for(let i = 0; i < height; i++) {
+        for(let j = 0; j < width; j++) {
+          if(m.board[i][j] == 'M' || m.board[i][j] == 'XX') {
+            var node = getNode(i, j)
+            node.classList.add('circle')
+          }else if(m.board[i][j].length == 2 && m.board[i][j] !== 'MM') {
+            var node = getNode(i, j)
+            node.style.backgroundImage = 'url(./imgs/incorrect_flag.png)'
+            node.style.backgroundPosition = 'center'
+            node.style.animation = 'none'
+          }
+        }
+      }
+
+      setTimeout(() => {
+        over()
+      }, 1000)
+    }
+
+    function over() {
+      var over = document.querySelector('.over')
+      over.style.display = 'block'
+      var time = document.querySelector('.time')
+
+      over.onclick = function(e) {
+        over.style.display = 'none'
+        
+        initLevel()
+        setTime()
+      }
+    }
+
+    function test() {
+      var width = m.width
+      var height = m.height
+
+      for(var i = 0; i < height; i++) {
+        for(var j = 0; j < width; j++) {
+          if(m.board[i][j] == 'E') {
+            var flag = true
+          }
+          if(flag || (m.board[i][j] == 'M' && flag) || (m.board[i][j].length == 2 && m.board[i][j][0] != 'M')) {
+            return false
+          }
+        }
+      }
+      return true
+    }
+
+    function win() {
+      gameOver()
+      var win = document.querySelector('.over')
+      var text = document.querySelector('.over button')
+      text.textContent = '再玩一次吧'
+      win.style.background = 'no-repeat top/contain url(./imgs/win_screen.png) #4a752c'
+    }
+  </script>
+
+</body>
+
+</html>

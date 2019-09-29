@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Conway</title>
+</head>
+<body>
+  <div>
+    <button id="next">next feneration</button>
+    <button id="auto">auto play</button>
+    <button id="stop">stop</button>
+  </div>
+
+  <div class="world"></div>
+
+  <script>
+
+    class conway {
+      constructor(width = 20, height = width) {
+        this.width = width
+        this.height = height
+        this.world =  new Array(height).fill(0).map(row => new Array(width).fill(0))
+        this.fillRadom()
+      }
+
+      //随机赋予生命
+      fillRadom(ration = 0.2) {
+        this.world.forEach((row, rowIdx) => {
+          row.forEach((cell, colIdx) => {
+            if(Math.random() < ration) {
+              this.world[rowIdx][colIdx] = 1
+            }
+          })
+        })
+      }
+
+      next() {
+        var world = new Array(this.height).fill(0).map(row => new Array(this.width).fill(0))
+
+        this.world.forEach((row, idx) => {
+          row.forEach((cell, idy) => {
+            var neighbor = 0
+            for(var i = idx - 1; i <= idx + 1; i++) {
+              for(var j = idy - 1; j <= idy + 1; j++) {
+                neighbor += this.world[i] ? ~~this.world[i][j] : 0
+              }
+            }
+
+            neighbor -= cell // 减去自身
+
+            if(cell) {
+              if(neighbor == 3 || neighbor == 2) {
+                world[idx][idy] = 1
+              }
+            }else if(neighbor == 3){
+              world[idx][idy] = 1
+            }
+
+          })
+        })
+
+        this.world = world
+        return this
+      }
+
+      setCellStatus(row, col, status) {
+        this.world[row][col] = status
+        return this
+      }
+
+      tostring() {
+        return '\n' + this.world.map(row => row.map(cell => cell ? 'O' : '.').join('')).join('\n')
+      }
+    }  
+  
+    var c = new conway()
+    var world = document.querySelector('.world')
+    world.innerHTML = renderHtml()
+
+    world.addEventListener('click', e => {
+      if(e.target.matches('input')) {
+        var row = e.target.parentNode
+        var rowIdx = Array.from(world.children).indexOf(row)
+
+        var colIdx = Array.from(row.children).indexOf(e.target)
+        c.setCellStatus(rowIdx, colIdx, e.target.checked | 0)
+      }
+    })
+
+    function renderHtml() {
+      return c.world.map(row => {
+        return `<div>
+          ${row.map(cell => { return `<input type='checkbox' ${cell ? 'checked' : ''}>`}).join('')}
+        </div>`
+      }).join('')
+    }
+
+    document.querySelector('#next').addEventListener('click', () => {
+      c.next()
+      world.innerHTML = renderHtml()
+    })
+
+    var interval
+    document.querySelector('#auto').addEventListener('click', () => {
+      interval = setInterval(() => {
+        c.next()
+        world.innerHTML = renderHtml()
+      }, 1000)
+    })
+
+    document.querySelector('#stop').addEventListener('click', () => {
+      clearInterval(interval)
+    })
+  </script>
+  
+</body>
+</html>

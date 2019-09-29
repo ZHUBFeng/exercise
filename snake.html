@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="http://at.alicdn.com/t/font_1368902_ap2sz0hp9uf.css">
+  <title>Document</title>
+  <style>
+    .wrapper {
+      position: relative;
+      width: 550px;
+      height: 550px;
+      margin: auto;
+      text-align: center;
+    }
+    #world {
+      border-collapse: collapse;
+      position: relative;
+      margin: auto;
+    }
+    #world td{
+      width: 20px;
+      height: 20px;
+      background-color: #F2D7D5;
+      border: 1px solid;
+    }
+    #world .apple {
+      background-color: red;
+    }
+    #world .body {
+      background-color: #666;
+    }
+    .start,
+    .stop {
+      outline: none;
+      margin: 10px;
+    }
+    .score {
+      padding-left: 20px;
+    }
+    .score::before {
+      content: 'score : ';
+    }
+    .again {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 150px;
+      height: 70px;
+      margin: auto;
+      background-color: #fff;
+      border-radius: 999px;
+    }
+    .again div {
+      margin: 8px auto;
+      text-align: center;
+    }
+    .btns button {
+      border: none;
+      height: 20px;
+      margin: 0 5px;
+    }
+    .control {
+      position: relative;
+      top: 50px;
+      height: 200px;
+    }
+    .control i{
+      position: absolute;
+      width: 150px;
+      height: 80px;
+      box-shadow: 0 0 1px #666;
+      border-radius: 999px;
+      display: inline-block;
+      font-size: 50px;
+      line-height: 80px;
+    }
+    .control .icon-jiantou-up {
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .icon-jiantoushang{
+      top: 50%;
+      transform: translateY(-50%);
+      left: 0;
+    }
+    .icon-a3down{
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .icon-jiantou-copy-copy {
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100%);
+    }
+    
+  </style>
+</head>
+<body>
+  <!-- <pre id="world"></pre> -->
+
+  <div class="wrapper">
+    <table id="world"></table>
+  </div>
+
+  
+
+  <script>
+    class snake {
+      constructor(width = 20, height = width) {
+        this.width = width
+        this.height = height
+        this.world = new Array(height).fill(0).map(it => new Array(width).fill('.'))
+
+        this.generateApple()
+        this.head = this.tail = this.generateHead()
+        
+        this.score = 0
+      }
+
+      generateHead() {
+        var x = (Math.random() * this.width / 2 + this.width / 4) | 0
+        var y = (Math.random() * this.height / 2 + this.height / 4) | 0
+
+        if(this.world[y][x] == '.') {
+          this.world[y][x] = '>'
+          return [x, y]
+        }else {
+          this.generateHead()
+        }
+      }
+
+      generateApple() {
+        var x = Math.random() * this.width | 0
+        var y = Math.random() * this.height | 0
+
+        if(this.world[y][x] == '.') {
+          this.world[y][x] = 'Q'
+          return [x, y]
+        }else {
+          this.generateApple()
+        }
+      }
+
+      getNextPos(x, y) {
+        switch(this.world[y][x]) {
+          case 'A': return [x, y - 1]
+          case 'v': return [x, y + 1]
+          case '>': return [x + 1, y]
+          case '<': return [x - 1, y]
+        }
+      }
+
+      getPosFlag(x, y) {
+        return this.world[y] ? this.world[y][x] : 'false'
+      }
+      setPosFlag(x, y, headFlag) {
+        this.world[y][x] = headFlag
+      }
+
+      setHeadDirection(direction) {
+        var [x, y] = this.head
+        this.world[y][x] = direction
+      }
+
+      next() {
+        var [hx, hy] = this.head //head position
+        var [hNx, hNy] = this.getNextPos(hx, hy) // head next position
+        var [tx, ty] = this.tail
+        var [tNx, tNy] = this.getNextPos(tx, ty)
+
+        var headNextFlag = this.getPosFlag(hNx, hNy)
+        var headFlag = this.getPosFlag(hx, hy)
+
+        if(headNextFlag == '.') {
+          this.setPosFlag(hNx, hNy, headFlag)
+          this.head = [hNx, hNy]
+          this.tail = [tNx, tNy]
+          this.setPosFlag(tx, ty, '.')
+        }else if(headNextFlag == 'Q') {
+          this.setPosFlag(hNx, hNy, headFlag)
+          this.head = [hNx, hNy]
+
+          this.score++
+          this.generateApple()
+        }else {
+          return 'end'
+        }
+      }
+
+      toString() {
+        return '\n' + this.world.map(it => it.join('')).join('\n')
+      }
+    }  
+    
+    
+    //
+    var s
+    var wrapper = document.querySelector('.wrapper')
+
+    var btnWrapper = document.createElement('div')
+    btnWrapper.classList.add('btn-wrapper')
+    wrapper.prepend(btnWrapper)
+
+    var start = document.createElement('button')
+    start.classList.add('start')
+    start.textContent = 'start'
+
+    var stop = document.createElement('button')
+    stop.classList.add('stop')
+    stop.textContent = 'stop'
+
+    var score = document.createElement('span')
+    score.classList.add('score')
+
+    btnWrapper.appendChild(start)
+    btnWrapper.appendChild(stop)
+    btnWrapper.appendChild(score)
+
+    initGame()
+
+    var isMobile = /Android|webOS|iPhone|iPad|BlackBerry/i.test(navigator.userAgent)
+
+    if (isMobile) {
+      console.log(1)
+      var control = document.createElement('div')
+      control.classList.add('control')
+
+      var up = document.createElement('i')
+      up.classList.add('iconfont')
+      up.classList.add('icon-jiantou-up')
+      var down = document.createElement('i')
+      down.classList.add('iconfont')
+      down.classList.add('icon-a3down')
+      var left = document.createElement('i')
+      left.classList.add('iconfont')
+      left.classList.add('icon-jiantoushang')
+      var right = document.createElement('i')
+      right.classList.add('iconfont')
+      right.classList.add('icon-jiantou-copy-copy')
+
+      control.appendChild(up)
+      control.appendChild(down)
+      control.appendChild(left)
+      control.appendChild(right)
+
+      wrapper.appendChild(control)
+
+      control.onclick = function(e) {
+        var classlist = Array.from(e.target.classList)
+        if(classlist.includes('icon-jiantou-up')) {
+          if(s.getPosFlag(...s.head)  !== 'v'){
+            s.setHeadDirection('A')
+          }
+        }
+        if(classlist.includes('icon-jiantou-copy-copy')) {
+          if(s.getPosFlag(...s.head)  !== 'A') {
+            s.setHeadDirection('v')
+          }
+        }
+        if(classlist.includes('icon-jiantoushang')) {
+          if(s.getPosFlag(...s.head)  !== '>') {
+            s.setHeadDirection('<')
+          }
+        }
+        if(classlist.includes('icon-a3down')) {
+          if(s.getPosFlag(...s.head)  !== '<') {
+            s.setHeadDirection('>')
+          }
+        }
+      }
+    } else {
+      window.addEventListener('keyup', function(e) {
+        switch(e.key) {
+          case 'ArrowUp':
+            if(s.getPosFlag(...s.head)  !== 'v'){
+              s.setHeadDirection('A')
+            }
+            return 
+          case 'ArrowDown':
+            if(s.getPosFlag(...s.head)  !== 'A') {
+              s.setHeadDirection('v')
+            }
+            return 
+          case 'ArrowLeft':
+            if(s.getPosFlag(...s.head)  !== '>') {
+              s.setHeadDirection('<')
+            }
+            return 
+          case 'ArrowRight':
+            if(s.getPosFlag(...s.head)  !== '<') {
+              s.setHeadDirection('>')
+            }
+            return 
+        }
+      })
+    }
+    
+    
+    function initGame() {
+      s = new snake()
+      score.textContent = '0'
+
+      initPrint(s.world)
+
+      var interval 
+      start.onclick = function() {
+        interval = setInterval(() => {
+          if(s.next() == 'end') {
+            end()
+          }else {
+            score.textContent = s.score
+            print(s.world)
+          }
+          
+        }, 500)
+      }
+
+      stop.onclick = () => {
+        clearInterval(interval)
+      }
+    }
+
+    function initPrint(world) {
+      var table = document.querySelector('#world')
+      var tbody = document.createElement('tbody')
+      table.appendChild(tbody)
+      var height = world.length
+      var width = world[0].length
+
+      for(var i = 0; i < height; i++) {
+        var tr = document.createElement('tr')
+        for(var j = 0; j < width; j++) {
+          var td = document.createElement('td')
+          tr.appendChild(td)
+
+          if(world[i][j] == 'Q') {
+            td.classList.add('apple')
+          }else if(world[i][j] != '.') {
+            td.classList.add('body')
+          }
+        }
+        tbody.appendChild(tr)
+      }
+    }
+
+    function print(world) {
+      var tbody = document.querySelector('#world > tbody')
+      var child = Array.from(tbody.children)
+      var height = world.length
+      var width = world[0].length
+
+      for(var i = 0; i < height; i++) {
+        var cell = Array.from(child[i].children)
+        for(var j = 0; j < width; j++) {
+          if(world[i][j] == 'Q') {
+            cell[j].classList.add('apple')
+          }else if(world[i][j] != '.') {
+            cell[j].classList.add('body')
+          }else if(Array.from(cell[j].classList).includes('apple') || Array.from(cell[j].classList).includes('body')) {
+            cell[j].classList.remove('apple')
+            cell[j].classList.remove('body')
+          }
+        }
+      }
+    }
+
+    function end() {
+      var tbody = document.querySelector('#world > tbody')
+      var stop = document.querySelector('.stop')
+      var star = document.querySelector('.start')
+      stop.click()
+
+      var div = document.createElement('div')
+      div.classList.add('again')
+      var over = document.createElement('div')
+      over.textContent = 'game over'
+      div.appendChild(over)
+      world.appendChild(div)
+
+      var ok = document.createElement('button')
+      ok.textContent = 'ok'
+
+      var againbtn = document.createElement('button')
+      againbtn.textContent = 'again'
+
+      var btns = document.createElement('div')
+      btns.classList.add('btns')
+
+      btns.appendChild(ok)
+      btns.appendChild(againbtn)
+
+      div.appendChild(btns)
+
+      ok.onclick = () => {
+        tbody.remove()
+        initGame()
+        div.remove()
+      }
+
+      againbtn.onclick = () => {
+        tbody.remove()
+        initGame()
+        div.remove()
+        start.click()
+      }
+    }
+    
+  </script>
+</body>
+</html>
