@@ -30,6 +30,14 @@
         this.generateMine(this.mineCount)
       }
 
+      // get boarder() {
+      //   return this.board
+      // }
+
+      set boarder(newBoard) {
+        this.board = newBoard
+      }
+
       generateMine(mine) {
         var i = 0
         while (true) {
@@ -50,7 +58,7 @@
       updateBoard(x, y) {
         if (this.board[x][y] == 'M') {
           this.board[x][y] = 'X'
-          return
+          return this.board
         }
 
         var mineCount = 0
@@ -67,7 +75,7 @@
         }
 
         if (/\d+/.test(this.board[x][y])) {
-          return
+          return this.board
         }
 
         for (var m = x - 1; m <= x + 1; m++) {
@@ -80,6 +88,7 @@
             }
           }
         }
+        return this.board
       }
 
       toString() {
@@ -93,7 +102,16 @@
   </script>
 
   <script type="text/babel">
+    function Timer(props) {
+      var [timer, setTimer] = useState('000')
+
+      return (
+        <span className="timer">{timer}</span>
+      )
+    }
+
     function App() {
+      console.log('update')
       var [m, setM] = useState(new Minesweeper())
       var [trueFlagCount, setTrueFlagCount] = useState(0)
       var [level, setLevel] = useState('easy')
@@ -186,9 +204,10 @@
       }
 
       function leftHandler(pos) {
+        debugger
         if (!lose) {
           if (firstClick) {
-            setTime()
+            // setTime()
             setFirst(false)
 
             if (invalidFlag.length > 0) {
@@ -196,7 +215,7 @@
               setM(produce(m => {
                 invalidFlag.forEach(pos => {
                   var [x, y] = pos
-                  m.board[x][y] = m.board[x][y].slice(0, 1)
+                  m.boarde[x][y] = m.board[x][y].slice(0, 1)
                 })
               }))
 
@@ -211,7 +230,11 @@
             return
           } else {
             
-            m.updateBoard(cx, cy)
+            var newBoard = m.updateBoard(cx, cy)
+
+            setM(produce(m => {
+              m.boarder = newBoard
+            }))
 
             if (m.board[cx][cy] == 'X') {
               setLose(true)
@@ -225,7 +248,8 @@
         }
       }
 
-      function rightHandler(pos, e) {
+      function rightHandler(e, pos) {
+        
         console.log(e,'e')
         if (!lose) {
           e.preventDefault()
@@ -265,7 +289,7 @@
         }
       }
 
-      function middleHandler(pos) {
+      function middleHandler(e, pos) {
         var [cx, cy] = [...pos]
 
         if (e.button == 1 && typeof m.board[cx][cy] === 'number' && !lose) {
@@ -302,8 +326,10 @@
                 if (m.board[i]) {
 
                   if (m.board[i][j] == 'E') {
-                    m.updateBoard(i, j)
-
+                    var newBoard = m.updateBoard(i, j)
+                    setM(produce(m => {
+                      m.boarder = newBoard
+                    }))
                   } 
                   
                 }
@@ -348,9 +374,9 @@
 
             <div className="message">
               <i></i>
-              <span className="leftMine">{ mineCount }</span>
+              <span className="leftMine">{mineCount}</span>
               <i></i>
-              <span className="time">{timer}</span>
+              <Timer />
             </div>
             
           </div>  
@@ -365,8 +391,8 @@
                         return (
                           <span key={idy} 
                             onClick={() => leftHandler([idx, idy])} 
-                            onMouseDown={(e) => middleHandler([idx, idy], e)} 
-                            onContextMenu={(e) => rightHandler([idx, idy], e)} 
+                            onMouseDown={(e) => middleHandler(e, [idx, idy])} 
+                            onContextMenu={(e) => rightHandler(e, [idx, idy])} 
                             className={addClass(item)}
                           >
                             {item > 0 ? item : ' '}
