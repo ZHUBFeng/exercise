@@ -5,241 +5,50 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="base.css">
   <title>Minesweeper</title>
-  <style>
-    body, html {
-      margin: 0;
-      background-color: #222;
-    }
-    .wrapper {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      margin: auto;
-      width: 750px;
-      height: 750px;
-    }
-    .header {
-      position: relative;
-      margin: 30px auto 0;
-      height: 60px;
-      background-color: #4a752c;
-      font-size: 16px;
-      color: #fff;
-    }
-    .level,
-    .message {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      padding: 0 4px 4px;
-    }
-    .header .level {
-      left: 20px;
-      font-size: 15px;
-      outline: none;
-    }
-    .header .message {
-      transform: translateX(-50%) translateY(-50%);
-      top: 50%;
-      left: 50%;
-      font-size: 0;
-    }
-    .message span {
-      font-size: 20px;
-      display: inline-block;
-      height: 25px;
-      width: 25px;
-    }
-    .message i {
-      background-size: cover;
-      width: 35px;
-      height: 35px;
-      display: inline-block;
-      vertical-align: bottom;
-    }
-    .message i:first-child {
-      background-image: url(./imgs/flag_icon.png);
-    }
-    .message i:last-of-type {
-      background-image: url(./imgs/clock_icon.png);
-      margin: 0 6px 0 15px;
-    }
-
-    #board {
-      margin: auto;
-      border-collapse: collapse;
-      background-color: #aad751;
-    }
-    #board td {
-      box-sizing: border-box;
-      padding: 0;
-      position: relative;
-      font-size: 0;
-    }
-    #board tr:nth-child(2n+1) td:nth-child(2n+1)::before{
-      content: '';
-      display: inline-block;
-      vertical-align: middle;
-      background-color: rgb(0,0,0,0.05);
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-    #board tr:nth-child(2n) td:nth-child(2n)::before{
-      content: '';
-      display: inline-block;
-      background-color: rgb(0,0,0,0.05);
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-    .easy td,
-    .easy td::before {
-      height: 45px;
-      width: 45px;
-    }
-    .medium td,
-    .medium td::before {
-      height: 30px;
-      width: 30px;
-    }
-    .hard td,
-    .hard td::before {
-      height: 28px;
-      width: 28px;
-    }
-    #board .mine {
-      background: center/cover url(./imgs/地雷.png);
-    }
-    
-    #board .turn {
-      background-color: #e5c29f;
-    }
-    #board .mCount {
-      text-align: center;
-      background-color: #e5c29f;
-      font-size: 21px;
-      font-weight: 1000;
-      color: #666;
-    }
-    #board .mayMine {
-      background: url(./imgs/flag_plant.png);
-      background-size: cover;
-    }
-    #board.easy .mayMine {
-      background-position: 5px 0px;
-      animation: bgiEasy .2s steps(9) forwards;
-    }
-    @keyframes bgiEasy {
-      to {
-        background-position: 5px -415px;
-      }
-    }
-    #board.medium .mayMine {
-      background-position: 3px 0px;
-      animation: bgiMedium .2s steps(9) forwards;
-    }
-    @keyframes bgiMedium {
-      to {
-        background-position: 3px -277px;
-      }
-    }
-    #board.hard .mayMine {
-      background-position: 2px 0px;
-      animation: bgiHard .2s steps(9) forwards;
-    }
-    @keyframes bgiHard {
-      to {
-        background-position: 2px -255px;
-      }
-    }
-    .circle::after {
-      content: '';
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      border-radius: 100%;
-      background-color: rgb(255, 0, 0, 0.6);
-      right:0;
-      left:0;
-      top:0;
-      bottom:0;
-      margin:auto;
-      transform:  scale3d(0, 0, 0);
-      animation: circle 0.2s forwards;
-    }
-    @keyframes circle {
-      to {
-        transform:  scale3d(1, 1, 1);
-      }
-    }
-    .over {
-      cursor: pointer;
-      box-shadow: 0 0 999px 999px rgb(0,0,0,0.7);
-      display: none;
-      font-size: 18px;
-      position: absolute;
-      width: 300px;
-      height: 190px;
-      text-align: center;
-      left: 50%;
-      top: 20%;
-      transform: translateX(-50%);
-      background: no-repeat top/contain url(./imgs/lose_screen.png) #4a752c;
-    }
-    .over i{
-      cursor: pointer;
-      background:no-repeat center/cover url(./imgs/refresh_white_24dp.png);
-      display: inline-block;
-      width: 30px;
-      height: 30px;
-      position: absolute;
-      bottom: 8px;
-      left: 22%;
-      z-index: 10;
-    }
-    .over button {
-      cursor: pointer;
-      position: absolute;
-      background-color: #4a752c;
-      border: none;
-      outline: none;
-      width: 150px;
-      bottom: 12px;
-      left: 30%;
-      font: 400 20px Roboto,Arial,sans-serif;
-      color: #fff;
-    }
-  
-  </style>
 </head>
 
 <body>
   <div class="wrapper">
 
-    <div class="header">
-      <select class="level">
-        <option value="easy">简单</option>
-        <option value="medium">中等</option>
-        <option value="hard">困难</option>
-      </select>
+    <div id="main" class="easy">
+      <div class="header">
+        <select class="level">
+          <option value="easy">简单</option>
+          <option value="medium">中等</option>
+          <option value="hard">困难</option>
+        </select>
 
-      <div class="message">
-        <i></i>
-        <span class="leftMine"></span>
-        <i></i>
-        <span class="time">000</span>
+        <div class="message">
+          <i></i>
+          <span class="leftMine"></span>
+          <i></i>
+          <span class="time">000</span>
+        </div>
+      </div>
+
+      <table id="board"></table>
+    </div>
+
+    <div class="over dialog" style="display: none;">
+      <div class="result">
+        <img src="./imgs/clock_icon.png" alt="">
+        <div class="finTime"></div>
+      </div>
+      <div class="btn">
+        <img src="./imgs/refresh_white_24dp.png" alt=""><span>再试一次吧</span>
       </div>
     </div>
 
-    <table id="board" class="easy"></table>
-
-    <div class="over">
-      <i></i>
-      <button>再试一次吧</button>
+    <div class="win dialog">
+      <div class="result">
+        <img src="./imgs/trophy_icon.png" alt="">
+        <div class="finTime"></div>
+      </div>
+      <div class="btn">
+        <img src="./imgs/refresh_white_24dp.png" alt=""><span>再玩一次吧</span>
+      </div>
     </div>
 
   </div>
@@ -253,23 +62,25 @@
 
         this.board = new Array(height).fill(0).map(row => new Array(width).fill('E'))
 
-        this.mine = mine
-        
-        this.generateMine(this.mine)
+        this.mineCount = mine
+
+        this.trueFlagCount = 0
+
+        this.generateMine(this.mineCount)
       }
 
       generateMine(mine) {
         var i = 0
-        while(true) {
+        while (true) {
           var x = Math.floor(Math.random() * this.height)
           var y = Math.floor(Math.random() * this.width)
-          if(this.board[x][y] == 'E') {
+          if (this.board[x][y] == 'E') {
             this.board[x][y] = 'M'
             i++
-            if(i == mine) {
+            if (i == mine) {
               break
             }
-          }else {
+          } else {
             continue
           }
         }
@@ -315,25 +126,50 @@
       }
     }
 
+    var srcAry = [
+      'clock_icon.png', 'flag_icon.png', 'flag_plant.png', 'incorrect_flag.png', 'lose_screen.png',
+      'refresh_white_24dp.png', 'trophy_icon.png', 'win_screen.png', '地雷.png'
+    ]
+
+    function loadImg(srcAry, srcPath) {
+      let loadedNum = 0
+
+      var imgs = []
+      for(var i = 0; i < srcAry.length; i++) {
+        imgs[i] = new Image()
+        imgs[i].src = srcPath + srcAry[i]
+        imgs[i].onload = function() {
+          loadedNum++
+          if(loadedNum === srcAry.length) {
+            console.log('加载完毕')
+            init()
+          }
+        }
+      }
+    }
+
     var m = new minesweeper()
     var board = document.querySelector('#board')
+    var main = document.querySelector('#main')
     var leftMine = document.querySelector('.leftMine')
 
     var time = document.querySelector('.time')
     var lose = false
+    var firstClick = true
+    var initFlagPos = []
     var interval
 
-
-    init()
+    loadImg(srcAry, './imgs/')
+    
 
     //计时
     function setTime() {
       var i = 0
-      clearInterval(interval)
+      // clearInterval(interval)
       document.querySelector('.time').textContent = '000'
       interval = setInterval(() => {
-      time.textContent = (++i).toString().padStart(3, 0)
-        if(i == 999) {
+        time.textContent = (++i).toString().padStart(3, 0)
+        if (i == 999) {
           clearInterval(interval)
         }
       }, 1000);
@@ -341,115 +177,164 @@
 
     //添加点击事件
     //左键
-    board.addEventListener('click', function(e) {
-      if(e.target.matches('#board td') && !lose) {
+    board.addEventListener('click', function (e) {
+      console.log(lose)
+      if (e.target.matches('#board td') && !lose) {
+        if (firstClick) {
+          setTime()
+          firstClick = false
+        }
+
+        if (initFlagPos.length > 0) {
+          
+          initFlagPos.forEach(pos => {
+            var [x, y] = pos
+            m.board[x][y] = m.board[x][y].slice(0, 1)
+
+            var node = getNode(...pos)
+            node.className = ''
+            m.trueFlagCount = 0
+            leftMine.textContent = m.mineCount
+          })
+        }
 
         var [cx, cy] = getPos(e.target)
-        if(m.board[cx][cy].length == 2) {
-          e.preventDefault()
+        if (m.board[cx][cy].length == 2) {
+          return
         } else {
           m.updateBoard(cx, cy)
-      
-          if(m.board[cx][cy] == 'X') {
+
+          if (m.board[cx][cy] == 'X') {
             e.target.classList.add('mine')
-            gameOver()
+            lose = true
+            gameOver(false, [cx, cy])
           }
           addClass()
         }
 
-        if(test()) {
-          win()
+        if (test(cx, cy)) {
+          gameOver(true, [cx, cy])
         }
       }
     })
 
     //中键
-    board.addEventListener('mousedown', function(e) {
+    board.addEventListener('mousedown', function (e) {
       e.preventDefault()
       var [cx, cy] = getPos(e.target)
 
-      if(e.which == 2 && /\d+/.test(m.board[cx][cy]) && !lose) {
+      if (e.which == 2 && /\d+/.test(m.board[cx][cy]) && !lose) {
         //计算标记的雷数
         var count = 0
+        var flag1 = false
 
-        for(var s = cx - 1; s <= cx + 1; s++) {
-          for(var v = cy - 1; v <= cy + 1; v++) {
-            if(m.board[s] && m.board[s][v] && m.board[s][v].length == 2) {
-              count++
+        for (var s = cx - 1; s <= cx + 1; s++) {
+          for (var v = cy - 1; v <= cy + 1; v++) {
+            if (m.board[s] && m.board[s][v]) {
+
+              if(m.board[s][v] === 'M') {
+                flag1 = true
+              }
+
+              if(m.board[s][v].length == 2) {
+                count++
+              }
+
             }
           }
         }
-        
-        if(count == m.board[cx][cy]) {
-          for(var i = cx - 1; i <= cx + 1; i++) {
-            for(var j = cy - 1; j <= cy + 1; j++) {
-              if(m.board[i]) {
-                if(m.board[i][j] == 'E') {
-                  var node = getNode(i, j)
-                  node.click()
-                }else if(m.board[i][j] == 'M') {
-                  var falg = true
-                  m.board[i][j] = 'XX'
-                }
+
+        if (count == m.board[cx][cy]) {
+          if(flag1) {
+            lose = true
+            gameOver(false, [cx, cy])
+            return
+          }
+
+          for (var i = cx - 1; i <= cx + 1; i++) {
+            for (var j = cy - 1; j <= cy + 1; j++) {
+              if (m.board[i]) {
+
+                if (m.board[i][j] == 'E') {
+                  m.updateBoard(i, j)
+                  addClass()
+                } 
+                
               }
             }
           }
 
-          if(test()) {
-            win()
+
+          if (test(cx, cy)) {
+            gameOver(true, [cx, cy])
           }
 
-          if(falg) {
-            gameOver()
-          }
         }
       }
     })
 
     //右键
-    board.addEventListener('contextmenu', function(e) {
-      if(e.target.matches('#board td') && !lose) {
+    board.addEventListener('contextmenu', function (e) {
+      if (e.target.matches('#board td') && !lose) {
         e.preventDefault()
 
-        if(e.target.className !== 'turn' && e.target.className !== 'mCount') {
+        if (e.target.className !== 'turn' && e.target.className !== 'mCount') {
           var [cx, cy] = getPos(e.target)
-        
+
+          if (firstClick) {
+            initFlagPos.push([cx, cy])
+          }
+
           var node = getNode(cx, cy)
           var list = Array.from(node.classList)
-          if(list.indexOf('mayMine') !== -1) {
+
+          if (list.indexOf('mayMine') !== -1) {
             node.classList.remove('mayMine')
             leftMine.textContent++
+            if (m.board[cx][cy] === 'MM') {
+              m.trueFlagCount--
+            }
             m.board[cx][cy] = m.board[cx][cy].slice(0, 1)
-          }else {
+          } else {
             node.classList.add('mayMine')
             leftMine.textContent--
+
+            if (m.board[cx][cy] === 'M') {
+              m.trueFlagCount++
+            }
+
             m.board[cx][cy] += 'M'
           }
 
-          if(test()) {
-            win()
+          if (test(cx, cy)) {
+            gameOver(true, [cx, cy])
           }
         }
       }
     })
 
     var level = document.querySelector('.header .level')
-    level.onchange = function(e) {
+    level.onchange = function (e) {
       initLevel()
     }
 
 
     function init() {
-      var mineCount = 0
+      clearTimeout(interval)
+      document.querySelector('.time').textContent = '000'
+
       var width = m.width
       var height = m.height
+
+      initFlagPos = []
+      firstClick = true
       lose = false
 
       //初始化界面
       var tbody = document.createElement('tbody')
-      for(var i = 0; i < height; i++) {
+      for (var i = 0; i < height; i++) {
         var tr = document.createElement('tr')
-        for(var j = 0; j < width; j++) {
+        for (var j = 0; j < width; j++) {
           var td = document.createElement('td')
           tr.appendChild(td)
         }
@@ -457,28 +342,28 @@
       }
       board.appendChild(tbody)
 
-      leftMine.textContent = m.mine
+      leftMine.textContent = m.mineCount
 
       var header = document.querySelector('.header')
       header.style.width = board.offsetWidth + 'px'
 
-      setTime()
     }
 
     function initLevel() {
+
       var select = document.querySelector('.level')
       var optionIdx = select.selectedIndex
-      var optionVal = select.options[optionIdx].value 
-      
-      if(optionVal == 'medium') {
+      var optionVal = select.options[optionIdx].value
+
+      if (optionVal == 'medium') {
         m = new minesweeper(18, 14, 40)
-        board.className = 'medium'
-      }else if(optionVal == 'hard') {
+        main.className = 'medium'
+      } else if (optionVal == 'hard') {
         m = new minesweeper(24, 20, 99)
-        board.className = 'hard'
-      }else if(optionVal == 'easy') {
+        main.className = 'hard'
+      } else if (optionVal == 'easy') {
         m = new minesweeper()
-        board.className = 'easy'
+        main.className = 'easy'
       }
 
       document.querySelector('#board tbody').remove()
@@ -490,17 +375,17 @@
       var width = m.width
       var height = m.height
 
-      for(var i = 0; i < height; i++) {
-        for(var j = 0; j < width; j++) {
+      for (var i = 0; i < height; i++) {
+        for (var j = 0; j < width; j++) {
 
-          if(m.board[i][j] == 'B') {
+          if (m.board[i][j] == 'B') {
             var node = getNode(i, j)
             node.classList.add('turn')
-          }else if(/\d+/.test(m.board[i][j])){
+          } else if (/\d+/.test(m.board[i][j])) {
             var node = getNode(i, j)
             var classList = Array.from(node.classList)
 
-            if(classList.indexOf('mayMine') == -1) {
+            if (classList.indexOf('mayMine') == -1) {
               node.classList.add('mCount')
               node.textContent = +m.board[i][j]
             }
@@ -530,69 +415,259 @@
 
       return node
     }
-    
-    function gameOver() {
+
+    //true 表示赢
+    function gameOver(state, pos) {
       clearInterval(interval)
-      lose = true
-      
+
+      var [cx, cy] = pos
       var width = m.width
       var height = m.height
 
-      for(let i = 0; i < height; i++) {
-        for(let j = 0; j < width; j++) {
-          if(m.board[i][j] == 'M' || m.board[i][j] == 'XX') {
-            var node = getNode(i, j)
-            node.classList.add('circle')
-          }else if(m.board[i][j].length == 2 && m.board[i][j] !== 'MM') {
-            var node = getNode(i, j)
-            node.style.backgroundImage = 'url(./imgs/incorrect_flag.png)'
-            node.style.backgroundPosition = 'center'
-            node.style.animation = 'none'
+      var mineAry = []
+      var errAry = []
+
+      for (let i = 0; i < height; i++) {
+        for (let j = 0; j < width; j++) {
+          if (m.board[i][j] == 'M') {
+            mineAry.push([i, j])
+
+            // var node = getNode(i, j)
+            // node.classList.add('circle')
+          } else if (m.board[i][j] === 'EM') {
+            errAry.push([i, j])
+
+            // var node = getNode(i, j)
+            // node.style.backgroundImage = 'url(./imgs/incorrect_flag.png)'
+            // node.style.backgroundPosition = 'center'
+            // node.style.animation = 'none'
           }
         }
       }
 
-      setTimeout(() => {
-        over()
-      }, 1000)
+      mineAry.sort((a, b) => {
+        var d1 = (a[1] - cy) * (a[1] - cy) + (a[0] - cx) * (a[0] - cx)
+        var d2 = (b[1] - cy) * (b[1] - cy) + (b[0] - cx) * (b[0] - cx)
+        return  d1 -d2
+      })
+
+      console.log(mineAry.map(a => {
+        return (a[1] - cy) * (a[1] - cy) + (a[0] - cx) * (a[0] - cx)
+      }))
+      
+      var promises = mineAry.map((pos, idx) => {
+        var node = getNode(...pos)
+        let delay = idx * 100
+        return new Promise(resolve => {
+          setTimeout(() => {
+            node.classList.add('circle')
+            resolve()
+          }, delay)
+        })
+      })
+      
+      Promise.all(promises).then((val) => {
+        errAry.forEach(pos => {
+          var node = getNode(...pos)
+          node.style.backgroundImage = 'url(./imgs/incorrect_flag.png)'
+          node.style.backgroundPosition = 'center'
+          node.style.animation = 'none'
+        })
+      }).then(() => {
+        setTimeout(() => {
+          over(state)
+        }, 600)
+      })
+
     }
 
-    function over() {
-      var over = document.querySelector('.over')
-      over.style.display = 'block'
+    function over(state) {
+      
       var time = document.querySelector('.time')
 
-      over.onclick = function(e) {
+      if (!state) {
+        var over = document.querySelector('.over')
+        over.style.display = 'block'
+        document.querySelector('.over .finTime').textContent = time.textContent
+      } else {
+        var over = document.querySelector('.win')
+        over.style.display = 'block'
+        document.querySelector('.win .finTime').textContent = time.textContent
+      }
+
+
+      over.onclick = function (e) {
         over.style.display = 'none'
-        
+
         initLevel()
-        setTime()
       }
     }
 
-    function test() {
+    function test(cx, cy) {
+      debugger
       var width = m.width
       var height = m.height
 
-      for(var i = 0; i < height; i++) {
-        for(var j = 0; j < width; j++) {
-          if(m.board[i][j] == 'E') {
-            var flag = true
+      var leftMineCount = 0
+
+      var turnCount = 0
+
+      var queue1 = [[cx, cy]]
+      var queue2 = [[cx, cy]]
+      var l = 0
+
+      while(queue1.length) {
+
+        var [x, y] = queue1[l++]
+
+        for(var i = x - 1; i <= x + 1; i++) {
+          for(var j = y - 1; j <= y + 1; j++) {
+            if(m.board[i] && m.board[i][j]) {
+              if(i == x && j == y) {
+                continue
+              }
+              if(m.board[i][j] === 'E' || m.board[i][j] === 'EM') {
+                return false
+              }
+
+              if(queue1.findIndex(item => item[0] == i && item[1] == j) >= 0) {
+                continue
+              } else {
+                queue2.push([i, j])
+              }
+
+              if(m.board[i][j] === 'M') {
+                leftMineCount++
+              }
+            }
           }
-          if(flag || (m.board[i][j] == 'M' && flag) || (m.board[i][j].length == 2 && m.board[i][j][0] != 'M')) {
-            return false
+        }
+
+        if(queue2.length === 0) {
+          break
+        }
+
+        if(l === queue1.length) {
+          queue1 = uniq(queue2)
+          queue2 = []
+          l = 0
+        }
+        
+      }
+
+      if(leftMineCount + m.trueFlagCount === m.mineCount) {
+        return true
+      }
+
+      function uniq(ary) {
+        var res = []
+        for(var i = 0; i < ary.length; i++) {
+          var idx = ary.findIndex(item => item[0] === ary[i][0] && item[1] === ary[i][1])
+          if(idx >= 0 && idx === i) {
+            res.push(ary[i])
+          } 
+        }
+        return res
+      }
+
+    }
+
+    function test2(cx, cy) {
+      console.log(Date.now(), 'start')
+
+      var width = m.width
+      var height = m.height
+      var leftMineCount = 0
+
+      var turnCount = 0
+      
+      for(var i = 0; i < height; i++) {
+        //有未翻开或标记错的直接返回
+        var unknowCount = m.board[i].filter(it => it === 'E' || it === 'EM')
+        if(unknowCount.length > 0) {
+          console.log(Date.now(), 'end')
+          return false
+        }
+        turnCount += m.board[i].filter(it => it.length !== 2 && it !== 'M').length
+        leftMineCount += m.board[i].filter(it => it === 'M').length
+
+        if(i === height - 1 && m.trueFlagCount + leftMineCount + turnCount === width * height) {
+          console.log(Date.now(), 'end')
+          return true
+        }
+      }
+
+      // for (var i = 0; i < height; i++) {
+      //   for (var j = 0; j < width; j++) {
+      //     if (m.board[i][j] == 'E' || (m.board[i][j].length == 2 && m.board[i][j][0] != 'M')) {
+      //       console.log(Date.now(), 'end')
+      //       return false
+      //     }
+      //     if (m.board[i][j] === 'M') {
+      //       leftMineCount++
+      //     }
+      //   }
+      // }
+
+      // if (m.trueFlagCount + leftMineCount === m.mineCount) {
+      // console.log(Date.now(), 'end')
+      //   return true
+      // }
+
+      // if (m.board.trueFlagCount === 0) {
+      // console.log(Date.now(), 'end')
+      //   return true
+      // }
+    }
+
+    function test3(cx, cy) {
+      console.log(Date.now(), 'start')
+      var markBoard = new Array(m.height).fill(0).map(row => new Array(m.width).fill(0))
+      var positions = [
+        [cx, cy]
+      ]
+      var leftMineCount = 0
+
+    
+      while (positions.length) {
+        var [x, y] = positions.shift()
+
+        for (var i = x - 1; i <= x + 1; i++) {
+          for (var j = y - 1; j <= y + 1; j++) {
+
+            if (m.board[i] && m.board[i][j]) {
+              if (markBoard[i][j] === 1) {
+                continue
+              }
+
+              markBoard[i][j] = 1
+              positions.push([i, j])
+
+              var val = m.board[i][j]
+
+              if (val === 'E' || val == 'EM') {
+                console.log(Date.now(), 'end')
+                return false
+              }
+
+              if (val === 'M') {
+                leftMineCount++
+              }
+
+              if (leftMineCount + m.trueFlagCount === m.mineCount) {
+                console.log(Date.now(), 'end')
+                return true
+              }
+
+            }
           }
         }
       }
-      return true
-    }
 
-    function win() {
-      gameOver()
-      var win = document.querySelector('.over')
-      var text = document.querySelector('.over button')
-      text.textContent = '再玩一次吧'
-      win.style.background = 'no-repeat top/contain url(./imgs/win_screen.png) #4a752c'
+      if(m.board.trueFlagCount === 0) {
+        console.log(Date.now(), 'start')
+        return true
+      }
     }
   </script>
 

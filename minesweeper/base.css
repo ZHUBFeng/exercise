@@ -1,0 +1,284 @@
+body,
+html {
+  margin: 0;
+  background-color: #222;
+  height: 100%;
+}
+
+.wrapper {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+}
+
+.header {
+  position: relative;
+  margin: 0 auto;
+  height: 60px;
+  background-color: #4a752c;
+  font-size: 16px;
+  color: #fff;
+}
+
+.level,
+.message {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0 4px 4px;
+}
+.header .level {
+  left: 20px;
+  font-size: 15px;
+  outline: none;
+}
+
+.header .message {
+  transform: translateX(-50%) translateY(-50%);
+  top: 50%;
+  left: 50%;
+  font-size: 0;
+}
+
+.message span {
+  font-size: 20px;
+  display: inline-block;
+  height: 25px;
+  width: 25px;
+}
+
+.message i {
+  background-size: cover;
+  width: 35px;
+  height: 35px;
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+.message i:first-child {
+  background-image: url(./imgs/flag_icon.png);
+}
+
+.message i:last-of-type {
+  background-image: url(./imgs/clock_icon.png);
+  margin: 0 6px 0 15px;
+}
+
+.easy {
+  margin-top: 130px;
+}
+.medium {
+  margin-top: 100px;
+}
+.hard {
+  margin-top: 70px;
+}
+
+#board {
+  margin: auto;
+  border-collapse: collapse;
+  background-color: #aad751;
+}
+
+#board td {
+  box-sizing: border-box;
+  padding: 0;
+  position: relative;
+  font-size: 0;
+}
+
+#board tr:nth-child(2n+1) td:nth-child(2n+1)::before {
+  content: '';
+  display: inline-block;
+  vertical-align: middle;
+  background-color: rgb(0, 0, 0, 0.05);
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#board tr:nth-child(2n) td:nth-child(2n)::before {
+  content: '';
+  display: inline-block;
+  background-color: rgb(0, 0, 0, 0.05);
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.easy td,
+.easy td::before {
+  height: 45px;
+  width: 45px;
+}
+
+.medium td,
+.medium td::before {
+  height: 30px;
+  width: 30px;
+}
+
+.hard td,
+.hard td::before {
+  height: 28px;
+  width: 28px;
+}
+
+#board .mine {
+  background: center/cover url(./imgs/地雷.png);
+}
+
+#board .turn {
+  background-color: #e5c29f;
+}
+
+#board .mCount {
+  text-align: center;
+  background-color: #e5c29f;
+  font-size: 21px;
+  font-weight: 1000;
+  color: #666;
+}
+
+#board .mayMine {
+  background: url(./imgs/flag_plant.png);
+  background-size: cover;
+}
+
+.easy .mayMine {
+  background-position: 0px 0px;
+  animation: bgiEasy .2s steps(9) forwards;
+}
+
+@keyframes bgiEasy {
+  to {
+    background-position: 0px -415px;
+  }
+}
+
+.medium .mayMine {
+  background-position: 0px 0px;
+  animation: bgiMedium .2s steps(9) forwards;
+}
+
+@keyframes bgiMedium {
+  to {
+    background-position: 0px -277px;
+  }
+}
+
+.hard .mayMine {
+  background-position: 0px 0px;
+  animation: bgiHard .2s steps(9) forwards;
+}
+
+@keyframes bgiHard {
+  to {
+    background-position: 0px -255px;
+  }
+}
+
+.circle::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 100%;
+  background-color: rgb(255, 0, 0, 0.6);
+  right: 0;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  transform: scale3d(0, 0, 0);
+  animation: circle 0.2s forwards;
+}
+
+@keyframes circle {
+  to {
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+.dialog {
+  cursor: pointer;
+  background: rgb(0, 0, 0, 0.7);
+  box-shadow: 0 0 999px 999px rgb(0, 0, 0, 0.7);
+  display: none;
+  font-size: 18px;
+  position: absolute;
+  text-align: center;
+  left: 50%;
+  top: 30%;
+  transform: translateX(-50%);
+}
+.dialog .result {
+  width: 300px;
+  height: 225px;
+  background-color: #4dc1f9;
+  border-radius: 8px;
+}
+.dialog.win .result {
+  height: 250px;
+}
+.dialog .result .finTime {
+  font: 400 28px Roboto,Arial,sans-serif;
+  color: white;
+}
+.dialog .btn {
+  width: 300px;
+  height: 64px;
+  margin: 12px auto;
+  border-radius: 8px;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  background: #4a752c;
+  text-align: center;
+}
+
+.dialog span {
+  display: inline-block;
+  cursor: pointer;
+  background-color: #4a752c;
+  border: none;
+  outline: none;
+  font: 400 20px Roboto, Arial, sans-serif;
+  color: #fff;
+  margin-top: 20px;
+}
+
+.dialog.win .result {
+  background : url(./imgs/win_screen.png) #4dc1f9 center bottom/contain no-repeat;
+}
+.dialog.over .result {
+  background: url(./imgs/lose_screen.png) #4dc1f9 center bottom/contain no-repeat;
+}
+.dialog .result img {
+  margin-top: 25px;
+  width: 60px;
+  height: auto;
+}
+.dialog.win .result img {
+  margin-top: 10px;
+}
+.dialog .btn img {
+  vertical-align: middle;
+  margin: 0 16px 2px 0;
+  width: 30px;
+  height: 30px;
+}
+
+
+#root .easy .header {
+  width: 456px;
+}
+#root .medium .header {
+  width: 547.2px;
+}
+#root .hard .header {
+  width: 672px;
+}
