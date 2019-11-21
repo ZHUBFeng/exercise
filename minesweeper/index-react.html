@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>myMinesweeper</title>
+  <script src="./js/react.development.js"></script>
+  <script src="./js/react-dom.development.js"></script>
+  <script src="./js/immer.umd.js"></script>
+
+  <!-- Don't use this in production: -->
+  <script src="./js/babel.min.js"></script>
+  <link rel="stylesheet" href="./base2.css">
+</head>
+<!-- 
+  E : 未翻开
+  B : 已翻开
+  M ：雷
+  EM/MM ：标记为雷
+  X ：炸掉
+ -->
+<body>
+  
+  <div id="root"></div>
+  <script>
+    class Minesweeper {
+      constructor(level = 'easy') {
+        if(level === 'easy') {
+          this.height = 8
+          this.width = 10
+          this.mineCount = 10
+        } else if(level === 'medium') {
+          this.height = 14
+          this.width = 18
+          this.mineCount = 40
+        } else {
+          this.height = 20
+          this.width = 24
+          this.mineCount = 99
+        }
+
+        this.board = new Array(this.height).fill(0).map(row => new Array(this.width).fill('E'))
+
+        this.trueFlagCount = 0
+
+        this.minePos = []
+
+        this.falseFlag = []
+
+        this.generateMine(this.mineCount)
+      }
+
+      generateMine(mine) {
+        var i = 0
+        while (true) {
+          var x = Math.floor(Math.random() * this.height)
+          var y = Math.floor(Math.random() * this.width)
+          if (this.board[x][y] == 'E') {
+            this.minePos.push([x, y])
+            this.board[x][y] = 'M'
+            i++
+            if (i == mine) {
+              break
+            }
+          } else {
+            continue
+          }
+        }
+      }
+
+      updateBoard(x, y) {
+        if (this.board[x][y] == 'M') {
+          this.board[x][y] = 'X'
+          return
+        }
+
+        var mineCount = 0
+        //计算周围的雷数
+        for (var i = x - 1; i <= x + 1; i++) {
+          for (var j = y - 1; j <= y + 1; j++) {
+            if (this.board[i] && (this.board[i][j] == 'M' || this.board[i][j] == 'MM')) {
+              mineCount++
+            }
+          }
+        }
+
+        if (mineCount) {
+          this.board[x][y] = mineCount
+        }
+
+        if (typeof this.board[x][y] === 'number') {
+          return
+        }
+
+        for (var m = x - 1; m <= x + 1; m++) {
+          for (var n = y - 1; n <= y + 1; n++) {
+            if (this.board[m] && this.board[m][n] == 'E') {
+              this.board[m][n] = 'B'
+              this.updateBoard(m, n)
+            } else if (typeof this.board[x][y] === 'number') {
+              continue
+            }
+          }
+        }
+        return
+      }
+
+      rightClick(x, y, status) {
+        var val = this.board[x][y]
+
+        if(val === 'E' || val === 'M') {
+          if(status === 'gaming') {
+            if(val === 'M') {
+              this.trueFlagCount++
+              this.minePos = this.minePos.filter(it => it[0] !== x || it[1] !== y)
+            } else {
+              this.falseFlag.push([x, y])
+            }
+          }
+          this.board[x][y] += 'M'
+        
+        } else if(val.length === 2) {
+          this.board[x][y] = val[0]
+          if(val[0] === 'M') {
+            this.trueFlagCount--
+            this.minePos.push([x, y])
+          } else {
+            this.falseFlag = this.falseFlag.filter(it => it[0] !== x || it[1] !== y)
+          }
+        }
+      }
+
+      middleClick(x, y) {
+        var val = this.board[x][y]
+
+        if(typeof val === 'number') {
+          var mineCount = 0
+          var flag = false
+          //计算周围的雷数
+          for (var i = x - 1; i <= x + 1; i++) {
+            for (var j = y - 1; j <= y + 1; j++) {
+              if (this.board[i] && this.board[i][j]) {
+
+                if(this.board[i][j] === 'M') {
+                  flag = true
+                } else if(this.board[i][j].length === 2){
+                  mineCount++
+                }
+
+              }
+            }
+          }
+
+          if(mineCount === val) {
+            if(flag) {
+              return -1
+            }
+            
+            for(var i = x - 1; i <= x + 1; i++) {
+              for(var j = y - 1; j <= y + 1; j++) {
+                if(this.board[i] && this.board[i][j] === 'E') {
+                  this.updateBoard(i, j)
+                }
+              }
+            }
+            
+            return 1
+          }
+
+        }
+        return 0
+      }
+
+      // -1 输 0 继续游戏 1 赢
+      test(cx, cy) {
+        
+        var start = Date.now()
+        var leftMineCount = 0
+        var val = this.board[cx][cy] 
+
+        if(val === 'X') {
+          return -1
+        }
+
+        var origin = [[cx, cy]]
+
+        var markBoard = new Array(this.height).fill(0).map(() => new Array(this.width).fill(0))
+        markBoard[cx][cy] = 1
+
+        while(origin.length) {
+
+          var pos = origin.shift()
+          var [x, y] = pos
+
+          for(var i = x - 1; i <= x + 1; i++) {
+            for(var j = y - 1; j <= y + 1; j++) {
+              try {
+                var val = this.board[i][j]
+                if(i === x & j === y || !val) {
+                  continue
+                }
+
+                if(!markBoard[i][j]) {
+                  markBoard[i][j] = 1
+                  origin.push([i, j])
+
+                  if(val === 'EM') {
+                    return -1
+                  } else if (val === 'E') {
+                    return 0
+                  } else if(val === 'M') {
+                    leftMineCount++
+                  }
+                }
+              } catch(e) {}
+
+            }
+          }
+        }
+
+        if(this.trueFlagCount + leftMineCount === this.mineCount) {
+          return 1
+        }
+
+        if(unTurn === 1 && this.trueFlagCount === this.mineCount) {
+          return 1
+        }
+        
+      }
+
+      test2(cx, cy, mouse){
+        var start = Date.now()
+        if((this.board[cx][cy] === 'X' || this.board[cx][cy] === 'M') && !mouse) {
+          
+          return -1
+        }
+
+        var leftMineCount = 0
+        var turnCount = 0
+        
+        for(var i = 0; i < this.height; i++) {
+          //有未翻开或标记错的直接返回
+          var unknowCount = this.board[i].filter(it => it === 'E').length
+          var mistakeCount = this.board[i].filter(it => it === 'EM').length
+
+          if(unknowCount > 0 || mistakeCount > 0) {
+            return 0
+          }
+
+          turnCount += this.board[i].filter(it => it === 'B' || typeof it === 'number').length
+          leftMineCount += this.board[i].filter(it => it === 'M').length
+
+          if(i === this.height - 1 && this.trueFlagCount + leftMineCount + turnCount === this.width * this.height) {
+            return 1
+          }
+
+          if(unknowCount === 1 && this.trueFlagCount === this.mineCount) {
+            return 1
+          }
+        }
+      }
+
+      toString() {
+        return '\n' + this.board.map(it => it.join('  ')).join('\n')
+      }
+    }
+
+    const produce = immer.produce
+  </script>
+
+  <script type="text/babel">
+
+    class Board extends React.PureComponent {
+      constructor(props) {
+        super(props)
+
+        this.state = {
+          m: new Minesweeper(props.level),
+          clickCount: 0,
+          firstClick: true,
+          level: props.level,
+          invalidFlag: [],
+          showUndectedMine: false,
+          showFalseFlag: false,
+          timer: [],
+        }
+      }
+
+      static getDerivedStateFromProps(props, state) {
+        var newState = {
+          m: new Minesweeper(props.level),
+          clickCount: 0,
+          firstClick: true,
+          level: props.level,
+          invalidFlag: [],
+          showUndectedMine: false,
+          showFalseFlag: false,
+          timer: []
+        }
+        
+        if(props.level !== state.level) {
+          return newState
+        }
+
+        if(props.init === true) {
+          props.inited()
+          return newState
+        }
+
+        return null
+      }
+
+      className = (item) => {
+        if(item === 'B') {
+          return 'turn'
+        } else if (item.length === 2) {
+          if(!this.state.showFalseFlag || item === 'MM') {
+            return 'mayMine'
+          } else {
+            return ''
+          }
+        } else if (item === 'X') {
+          return 'mine'
+        } else if (typeof item === 'number') {
+          return 'mCount'
+        }
+
+      }
+
+      test(cx, cy, mouse) {
+        
+        var res = this.state.m.test2(cx, cy, mouse)
+
+        // -1 lose 1 win
+        if(res) {
+          
+          var status = res === -1 ? 'lose' : 'victory'
+          this.show(status, [cx, cy])
+        }
+      }
+
+      show(status, pos) {
+        var [cx, cy] = pos
+        this.props.clear()
+
+        var lastDelayTime
+
+        if(this.state.m.minePos.length) {
+          var sortMinePos = this.state.m.minePos.sort((a, b) => {
+            var d1 = (a[1] - cy) * (a[1] - cy) + (a[0] - cx) * (a[0] - cx)
+            var d2 = (b[1] - cy) * (b[1] - cy) + (b[0] - cx) * (b[0] - cx)
+            return  d1 -d2
+          })
+
+          lastDelayTime = this.state.m.minePos.length * 100
+
+          this.setState({
+            ...this.state,
+            minePos: sortMinePos,
+          })
+
+          if(this.state.m.falseFlag.length) {
+            var t1 = setTimeout(() => {
+              this.setState({
+                ...this.state,
+                showFalseFlag: true
+              })
+            }, lastDelayTime + 500)
+            lastDelayTime += 500
+          }
+
+        } else {
+          lastDelayTime = 0
+        }
+
+        //出现dialog
+        var t2 = setTimeout(() => {
+          this.props.changeStatus(status)
+        }, lastDelayTime + 500)
+
+        
+        this.setState(produce(state => {
+          state.showUndectedMine = true
+          
+          if(t1) {
+            state.timer.push(t1)
+          }
+          state.timer.push([t2, status])
+        }))
+      }
+
+      leftHandler = (pos) => {
+        var [cx, cy] = pos
+        
+        if(this.state.firstClick) {
+
+          this.props.changeLeftMineCount(this.state.invalidFlag.length)
+
+          this.setState(produce(state => {
+            state.firstClick = false
+            state.invalidFlag.forEach(pos => {
+              var [x, y] = pos
+              state.m.board[x][y] = state.m.board[x][y][0]
+            })
+          }))
+          
+          if(this.state.m.board[cx][cy] !== 'M') {
+            this.props.startGame()
+          }
+
+          this.props.changeStatus('gaming')
+        }
+        
+        if(this.props.status !== 'gaming' && this.props.status !== 'prepare') {
+          return
+        }
+
+        if(this.state.m.board[cx][cy] === 'E' || this.state.m.board[cx][cy] === 'M') {
+
+          if(this.state.firstClick) {
+            this.setState(produce(state => {
+              state.m.updateBoard(cx, cy)
+              state.clickCount = state.clickCount + 1
+            }))
+          } else {
+            this.state.m.updateBoard(cx, cy)
+            this.setState(produce(state => {
+              state.clickCount = state.clickCount + 1
+            }))
+
+          }
+          this.test(cx, cy)
+        }
+      }
+
+      rightHandler = (e, pos) => {
+        e.preventDefault()
+        
+        var status = this.props.status
+        if(status !=='gaming' && status !== 'prepare') {
+          return
+        }
+        var [cx, cy] = pos
+
+        if(status === 'prepare') {
+          if(this.state.m.board[cx][cy].length === 1) {
+            this.setState(produce(state => {
+              state.invalidFlag.push([cx, cy])
+            }))
+          } else {
+            this.setState(produce(state => {
+              state.invalidFlag = state.invalidFlag.filter(it => it[0] !== cx || it[1] !== cy)
+            }))
+          }
+        }
+
+        if(!(this.state.m.board[cx][cy] === 'B' || typeof this.state.m.board[cx][cy] === 'number')) {
+          
+          if(this.state.m.board[cx][cy].length === 1) {
+            this.props.changeLeftMineCount(-1)
+          } else {
+            this.props.changeLeftMineCount(1)
+          }
+
+
+          this.state.m.rightClick(cx, cy, status)
+
+          this.setState(produce(state => {
+            state.clickCount = state.clickCount + 1
+          }))
+          
+          this.test(cx, cy, 'right')
+        }
+      }
+
+      middleHandler = (e, pos) => {
+        e.preventDefault()
+
+        
+        if(this.state.showUndectedMine) {
+          this.immediateOver()
+          return
+        }
+
+        if(e.button !== 1) {
+          return
+        }
+
+        if(this.props.status !== 'gaming') {
+          return
+        }
+
+        var [cx, cy] = pos
+        var res = this.state.m.middleClick(cx, cy)
+
+        // 1 周围都被展开 检测是否win; -1 周围有错误旗子 lose;点击的不是数字不执行任何操作
+        if(res === 1) {
+          this.setState({
+            ...this.state,
+            clickCount: this.state.clickCount + 1
+          })
+
+          this.test(cx, cy)
+        } else if(res === -1) {
+          this.show('lose', [cx, cy])
+          // this.props.changeStatus('lose')
+          return
+        }
+      }
+
+      immediateOver = () => {
+        
+        for(var timer of this.state.timer) {
+          if(typeof timer !== 'object') {
+            clearTimeout(timer)
+          } else {
+            clearTimeout(timer[0])
+            this.props.changeStatus(timer[1])
+          }    
+        }
+      }
+
+      addTimer = (timer) => {
+        this.setState(produce(state => {
+          state.timer.push(timer)
+        }))
+      }
+ 
+      render() {
+        return (
+          <div id="board">
+            {
+              this.state.m.board.map((row, idx) => {
+                return (
+                  <div className="row" key={idx}>
+                    {
+                      row.map((item, idy) => {
+                        return (
+                          <span 
+                            key={idy} className={this.className(item)}
+                            onClick={() => this.leftHandler([idx, idy])}
+                            onContextMenu={(e) => this.rightHandler(e, [idx, idy])}
+                            onMouseDown={(e) => this.middleHandler(e, [idx,idy])}
+                          >
+                            {typeof item === 'number' ? item : ''}
+                            {
+                              item === 'M' && this.state.showUndectedMine && 
+                              <DelayMine pos={[idx, idy]} addTimer={this.addTimer} minePos={this.state.minePos}/>
+                            }
+                            {
+                              item === 'EM'  && this.state.showFalseFlag &&
+                              <span className="falseFlag"></span>
+                            }
+                          </span>
+                        )
+                      })
+                    }  
+                  </div>
+
+                )
+              })
+            }  
+          </div>
+        )
+      }
+    }
+
+    function DelayMine(props) {
+      var [show, setShow] = React.useState(false)
+
+      var [x, y] = props.pos
+
+      var delay = (props.minePos.findIndex(pos => pos[0] === x && pos[1] === y) + 1) * 100
+
+      React.useEffect(() => {
+        var timer = setTimeout(() => {
+          setShow(true)
+        }, delay)
+
+
+        props.addTimer(timer)
+
+        return () => {
+          clearTimeout(timer)
+        }
+      }, [])
+
+      return (
+        show && <span className="circle"></span>
+      )
+    }
+
+    class App extends React.Component{
+      constructor() {
+        super()
+
+        this.state = {
+          status: 'prepare',
+          timer: '000',
+          interval: null,
+          init: false,
+          level: 'easy',
+          leftMineCount: 10,
+          bestScore: JSON.parse(localStorage.getItem('easy')) || '---',
+        }
+      }
+
+      async componentDidMount() {
+        var srcAry = [
+          'clock_icon.png', 'flag_icon.png', 'flag_plant.png', 'incorrect_flag.png', 'lose_screen.png',
+          'refresh_white_24dp.png', 'trophy_icon.png', 'win_screen.png', '地雷.png'
+        ]
+        await Promise.all(srcAry.map(img => load('./imgs/' + img)))
+
+        function load(src) {
+          return new Promise(resolve => {
+            var img = new Image()
+            img.src = src
+            img.onload = resolve
+          })
+        }
+      }
+
+      changeStatus = (status) => {
+        this.setState({
+          ...this.state,
+          status,
+        })
+
+        if(status === 'victory') {
+          this.setState(produce(state => {
+            state.bestScore = state.bestScore > state.timer || state.bestScore === '---'  ? state.timer : state.bestScore
+          }))
+        }
+
+        if(status !== 'gaming') {
+          this.clear()
+        }
+      }
+
+      startGame = () => {
+        var i = 0
+        var interval = setInterval(() => {
+          
+          this.setState(produce(state => {
+            state.timer = (++i).toString().padStart(3, 0)
+            state.interval = interval
+            if(i === 999) {
+              clearInterval(interval)
+            }
+          }))
+        }, 1000);
+      }
+
+      again = () => {
+        this.clear()
+        
+        if(this.state.status === 'victory') {
+          localStorage.setItem(this.state.level, JSON.stringify(this.state.bestScore))
+        }
+
+        this.setState(produce(state => {
+          state.init = true
+          state.status = 'prepare'
+          state.timer = '000'
+          state.leftMineCount = state.level === 'easy' ? 10 : (state.level === 'medium' ? 40 : 99)
+        }))
+      }
+
+      changeLevel = (e) => {
+        var level = e.target.value
+        this.setState(produce(state => {
+          state.level = level
+          state.timer = '000'
+          state.status = 'prepare'
+          state.leftMineCount = level === 'easy' ? 10 : state.level === 'medium' ? 40 : 99
+          state.bestScore = JSON.parse(localStorage.getItem(level)) || '---'
+        }))
+        this.clear()
+      }
+
+      inited = () => {
+        this.setState({
+          ...this.state,
+          init: false,
+          status: 'prepare'
+        })
+      }
+
+      changeLeftMineCount = (val) => {
+        this.setState({
+          ...this.state,
+          leftMineCount: this.state.leftMineCount + val
+        })
+      }
+
+      clear = () => {
+        clearInterval(this.state.interval)
+      }
+
+      render() {
+        return (
+          <div className = "wrapper">
+            <div id = "main" className = {this.state.level}>
+              <div className = "header">
+                <select className = "level" onChange={this.changeLevel}>
+                  <option value="easy">简单</option>
+                  <option value="medium">中等</option>
+                  <option value="hard">困难</option>
+                </select>
+
+                <div className = "message">
+                  <i></i>
+                  <span className = "leftMine">{this.state.leftMineCount}</span>
+                  <i></i>
+                  <span className = "time">{this.state.timer}</span>
+                </div>
+              </div>  
+
+              <Board 
+                status={this.state.status} 
+                changeStatus={this.changeStatus} 
+                startGame={this.startGame} 
+                init={this.state.init}
+                level={this.state.level}
+                inited={this.inited}
+                changeLeftMineCount={this.changeLeftMineCount}
+                clear={this.clear}
+              />
+            </div>
+              
+            {
+              (this.state.status !== 'gaming' && this.state.status !== 'prepare') && 
+              <div className={["dialog", this.state.status === 'victory' ? 'win' : this.state.status === 'lose' ? 'lose' : ''].join(' ')}>
+                <div className="result">
+                  <div className="clock">
+                    <img src="./imgs/clock_icon.png" alt=""/>
+                    <div className="score">{this.state.timer}</div>
+                  </div>
+                  <div className="trophy">
+                    <img src="./imgs/trophy_icon.png" alt=""/>
+                    <div className="bestScore">
+                      { this.state.bestScore }
+                    </div>
+                  </div>
+                </div>
+                <div className="btn">
+                  {
+                    this.state.status === 'lose' ?  <div onClick={this.again}><img src="./imgs/refresh_white_24dp.png" alt=""/><span>再试一次吧</span> </div>
+                    : <div onClick={this.again}><img src="./imgs/refresh_white_24dp.png" alt=""/><span>再玩一次吧</span></div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        )
+      }
+    }
+    
+    ReactDOM.render(
+        <App />,
+        document.getElementById('root')
+      );
+
+    </script>
+  <!--
+      Note: this page is a great way to try React but it's not suitable for production.
+      It slowly compiles JSX with Babel in the browser and uses a large development build of React.
+
+      Read this section for a production-ready setup with JSX:
+      https://reactjs.org/docs/add-react-to-a-website.html#add-jsx-to-a-project
+
+      In a larger project, you can use an integrated toolchain that includes JSX instead:
+      https://reactjs.org/docs/create-a-new-react-app.html
+
+      You can also use React without JSX, in which case you can remove Babel:
+      https://reactjs.org/docs/react-without-jsx.html
+    -->
+</body>
+
+</html>

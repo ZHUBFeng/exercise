@@ -431,16 +431,8 @@
         for (let j = 0; j < width; j++) {
           if (m.board[i][j] == 'M') {
             mineAry.push([i, j])
-
-            // var node = getNode(i, j)
-            // node.classList.add('circle')
           } else if (m.board[i][j] === 'EM') {
             errAry.push([i, j])
-
-            // var node = getNode(i, j)
-            // node.style.backgroundImage = 'url(./imgs/incorrect_flag.png)'
-            // node.style.backgroundPosition = 'center'
-            // node.style.animation = 'none'
           }
         }
       }
@@ -504,7 +496,7 @@
     }
 
     function test(cx, cy) {
-      debugger
+      
       var width = m.width
       var height = m.height
 

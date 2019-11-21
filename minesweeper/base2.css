@@ -31,7 +31,6 @@ html {
   transform: translateX(-50%) translateY(-50%);
   top: 50%;
   left: 50%;
-  font-size: 0;
 }
 
 .message span {
@@ -71,7 +70,6 @@ html {
 #board {
   margin: auto;
   background-color: #aad751;
-  font-size: 0;
 }
 
 #board .row span {
@@ -93,7 +91,7 @@ html {
   line-height: 28px;
 }
 
-#board .row:nth-child(2n+1) span:nth-child(2n+1)::before {
+#board .row:nth-child(2n+1) span:not(.circle):not(.falseFlag):nth-child(2n+1)::before {
   content: '';
   display: inline-block;
   vertical-align: middle;
@@ -103,7 +101,7 @@ html {
   left: 0;
 }
 
-#board .row:nth-child(2n) span:nth-child(2n)::before {
+#board .row:nth-child(2n) span:not(.circle):not(.falseFlag):nth-child(2n)::before {
   content: '';
   display: inline-block;
   background-color: rgb(0, 0, 0, 0.05);
@@ -146,46 +144,47 @@ html {
   color: #666;
 }
 
-#board .mayMine {
-  background: url(./imgs/flag_plant.png);
-  background-size: cover;
-}
-
-.easy .mayMine {
-  background-position: 0px 0px;
-  animation: bgiEasy .2s steps(9) forwards;
-}
-
-@keyframes bgiEasy {
-  to {
-    background-position: 0px -415px;
-  }
-}
-
 .medium .mayMine {
-  background-position: 0px 0px;
+  background: url(./imgs/flag_plant.png) no-repeat;
+  background-size: 30px 303.75px;
   animation: bgiMedium .2s steps(9) forwards;
 }
 
-@keyframes bgiMedium {
-  to {
-    background-position: 0px -277px;
-  }
+.hard .mayMine {
+  background: url(./imgs/flag_plant.png) no-repeat;
+  background-size: 28px 283.5px;
+  animation: bgiHard .2s steps(9) forwards;
 }
 
-.hard .mayMine {
-  background-position: 0px 0px;
-  animation: bgiHard .2s steps(9) forwards;
+.easy .mayMine {
+  background: url(./imgs/flag_plant.png) no-repeat;
+  background-size: 45px 455.625px;
+  animation: bgiEasy .2s steps(9) forwards;
 }
 
 @keyframes bgiHard {
   to {
-    background-position: 0px -255px;
+    background-size: 28px 283.5px;
+    background-position: 0px -254.5px;
   }
 }
 
-.circle::after {
-  content: '';
+@keyframes bgiMedium {
+  to {
+    background-size: 30px 303.75px;
+    background-position: 0px -273.75px;
+  }
+}
+
+
+@keyframes bgiEasy {
+  to {
+    background-size: 45px 455.625px;
+    background-position: 0px -410px;
+  }
+}
+
+#board .row span.circle {
   position: absolute;
   width: 20px;
   height: 20px;
@@ -200,6 +199,15 @@ html {
   animation: circle 0.2s forwards;
 }
 
+#board .row span.falseFlag {
+  position: absolute;
+  display: inline-block;
+  background: url('./imgs/incorrect_flag.png') center/cover;
+  left: 0;
+  top: 0;
+
+}
+
 @keyframes circle {
   to {
     transform: scale3d(1, 1, 1);
@@ -210,7 +218,6 @@ html {
   cursor: pointer;
   background: rgb(0, 0, 0, 0.7);
   box-shadow: 0 0 999px 999px rgb(0, 0, 0, 0.7);
-  xdisplay: none;
   font-size: 18px;
   position: absolute;
   text-align: center;
@@ -257,17 +264,33 @@ html {
 .dialog.win .result {
   background : url(./imgs/win_screen.png) #4dc1f9 center bottom/contain no-repeat;
 }
-.dialog.over .result {
+.dialog.lose .result {
   background: url(./imgs/lose_screen.png) #4dc1f9 center bottom/contain no-repeat;
 }
-.dialog .result img {
+.dialog .clock,
+.dialog .trophy {
+  display: inline-block;
   margin-top: 25px;
+  margin-left: 36px;
+  margin-right: 36px;
+  text-align: center;
+}
+
+.dialog .clock img,
+.dialog .trophy img {
   width: 60px;
   height: auto;
 }
-.dialog.win .result img {
-  margin-top: 10px;
+
+
+.dialog .clock div,
+.dialog .trophy div {
+  font: 400 28px Roboto,Arial,sans-serif;
+  color: white;
 }
+
+
+
 .dialog .btn img {
   vertical-align: middle;
   margin: 0 16px 2px 0;

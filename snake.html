@@ -101,13 +101,10 @@
   </style>
 </head>
 <body>
-  <!-- <pre id="world"></pre> -->
 
   <div class="wrapper">
     <table id="world"></table>
   </div>
-
-  
 
   <script>
     class snake {
@@ -158,6 +155,7 @@
       getPosFlag(x, y) {
         return this.world[y] ? this.world[y][x] : 'false'
       }
+      
       setPosFlag(x, y, headFlag) {
         this.world[y][x] = headFlag
       }
