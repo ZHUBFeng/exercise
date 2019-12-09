@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>clock</title>
+  <style>
+    *{
+      xbackground-color: rgb(0,0,0,0.08);
+      xbackground-color: pink;
+    }
+    html,body{
+      margin: 0;
+      height: 100%;
+    }
+    .wrap{
+      position: relative;
+      height: 100%;
+      overflow: hidden;
+    }
+    .clock{
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-50%);
+      width: 600px;
+      height: 600px;
+      border-radius: 999px;
+      background-color: rgb(0,0,0,0.08);
+    }
+    span{
+      display: inline-block;
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      line-height: 60px;
+      text-align: center;
+      font-size: 45px;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      margin: auto;
+      color: transparent;
+      -webkit-background-clip:text;
+      background-image: linear-gradient( 135deg, #FFAA85 10%, #B3315F 100%);    
+    }
+    .clock > span:nth-of-type(1) {
+      transform: rotate(-60deg) translatex(250px) rotate(60deg);
+    }
+    .clock > span:nth-of-type(2) {
+      transform: rotate(-30deg) translatex(250px) rotate(30deg);
+    }
+    .clock > span:nth-of-type(3) {
+      transform: rotate(0deg) translatex(250px) rotate(0deg);
+    }
+    .clock > span:nth-of-type(4) {
+      transform: rotate(30deg) translatex(250px) rotate(-30deg);
+    }
+    .clock > span:nth-of-type(5) {
+      transform: rotate(60deg) translatex(250px) rotate(-60deg);
+    }
+    .clock > span:nth-of-type(6) {
+      transform: rotate(90deg) translatex(250px) rotate(-90deg);
+    }
+    .clock > span:nth-of-type(7) {
+      transform: rotate(120deg) translatex(250px) rotate(-120deg);
+    }
+    .clock > span:nth-of-type(8) {
+      transform: rotate(150deg) translatex(250px) rotate(-150deg);
+    }
+    .clock > span:nth-of-type(9) {
+      transform: rotate(180deg) translatex(250px) rotate(-180deg);
+    }
+    .clock > span:nth-of-type(10) {
+      transform: rotate(210deg) translatex(250px) rotate(-210deg);
+    }
+    .clock > span:nth-of-type(11) {
+      transform: rotate(240deg) translatex(250px) rotate(-240deg);
+    }
+    .clock > span:nth-of-type(12) {
+      transform: rotate(270deg) translatex(250px) rotate(-270deg);
+    }
+    /* 指针 */
+    .hour{
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      background-color: #2C3E50;
+      width: 10px;
+      height: 130px;
+      border-radius: 50% 50% 0 0/30% 30% 0 0;
+      transform-origin: center bottom;
+      transform: translateX(-50%) translateY(-100%);
+      animation: hour  steps(120) 43200s infinite;
+    }
+    .min{
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 5px;
+      height: 180px;
+      background-color: #5D6D7E;
+      border-radius: 50% 50% 0 0/15% 15% 0 0;
+      transform: translateX(-50%) translateY(-100%);
+      animation: min steps(60) 3600s infinite;
+      transform-origin: center bottom;
+    }
+    .sec{
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      margin: auto;
+      animation: second steps(60) 60s infinite;
+    }
+    .second{
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      height: 265px;
+      width: 4px;
+      background-color: #002661;
+      border-radius: 50% 50% 0 0/10% 10% 0 0;
+      transform-origin: 50% 85%;
+      transform: translateX(-50%) translateY(-85%);
+      animation: sec 1s infinite;
+    }
+    @keyframes hour{
+      from{
+        transform: translateX(-50%) translateY(-100%) rotate(0deg);
+      }
+      to{
+        transform: translateX(-50%) translateY(-100%) rotate(360deg)
+      }
+    }
+    @keyframes min{
+      from{
+        transform: translateX(-50%) translateY(-100%) rotate(0deg);
+      }
+      to{
+        transform: translateX(-50%) translateY(-100%) rotate(360deg);
+      }
+    }
+    @keyframes second{
+      from{
+        transform: translateX(-50%) translateY(-85%) rotate(0deg);
+      }
+      to{
+        transform: translateX(-50%) translateY(-85%) rotate(360deg);
+      }
+    }
+    @keyframes second{
+      from{
+        transform: rotate(0deg);
+      }
+      to{
+        transform: rotate(360deg);
+      }
+    }
+    @keyframes sec{
+      0%{
+        transform: translateX(-50%) translateY(-85%) rotate(0deg);
+      }
+      5%{
+        transform: translateX(-50%) translateY(-85%) rotate(2deg);
+      }
+      10%{
+        transform: translateX(-50%) translateY(-85%) rotate(0deg);
+      }
+      15%{
+        transform: translateX(-50%) translateY(-85%) rotate(-1deg);
+      }
+      20%{
+        transform: translateX(-50%) translateY(-85%) rotate(0deg);
+      }
+      100%{
+        transform: translateX(-50%) translateY(-85%) rotate(0deg);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="clock">
+      <span>1</span>
+      <span>2</span>
+      <span>3</span>
+      <span>4</span>
+      <span>5</span>
+      <span>6</span>
+      <span>7</span>
+      <span>8</span>
+      <span>9</span>
+      <span>10</span>
+      <span>11</span>
+      <span>12</span>
+      <div class="hour"></div>
+      <div class="min"></div>
+      <div class="sec">
+        <div class="second"></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

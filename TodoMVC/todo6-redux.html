@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>todos</title>
+    <script src="./js/react.development.js"></script>
+    <script src="./js/react-dom.development.js"></script>
+    <script src="./js/immer.umd.js"></script>
+    <script src="./js/redux.js"></script>
+    <script src="./js/react-redux.js"></script>
+    
+    <!-- Don't use this in production: -->
+    <script src="./js/babel.min.js"></script>
+    <link rel="stylesheet" href="./todo.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+      const { useContext, useState, useEffect } = React
+      const produce = immer.produce
+      const { Provider, connect } = ReactRedux
+
+      var state = {
+        todos: [{
+          content: 'eat',
+          completed: false,
+          id: Date.now(),
+        }, {
+          content: 'drink',
+          completed: true,
+          id: Date.now() + 1,
+        }],
+        visibility: 'all',
+      }
+
+      const filterTodo = (todos, filter) => {
+        if(filter == 'all') {
+          return todos
+        } else if(filter == 'active') {
+          return todos.filter(todo => !todo.completed)
+        } else {
+          return todos.filter(todo => todo.completed)
+        }
+      }
+
+      const isToggleAll = (todos) => {
+        if(todos.every(todo => todo.completed)) {
+          return true
+        } else {
+          return false
+        }
+      }
+      
+      const mutations = {
+        addTodo: produce((state, action) => {
+          state.todos.push(action.newTodo)
+        }),
+        toggleAll: produce((state, action) => {
+          if(isToggleAll(state.todos)) {
+            state.todos.forEach(todo => todo.completed = false)
+          } else {
+            state.todos.forEach(todo => {
+              if(!todo.completed) {
+                todo.completed = true
+              }
+            })
+          }
+        }),
+        changeState: produce((state, action) => {
+          state.todos.forEach(todo => {
+            if(todo.id == action.id) {
+              todo.completed = !todo.completed
+            }
+          })
+        }),
+        delTodo: produce((state, action) => {
+          state.todos = state.todos.filter(todo => todo.id != action.id)
+        }),
+        changeCategory: produce((state, action) => {
+          state.visibility = action.category
+        }),
+        clearCompleted: produce((state, action) => {
+          state.todos = state.todos.filter(todo => !todo.completed)
+        }),
+        changeContent: produce((state, action) => {
+          state.todos.forEach(todo => {
+            if(todo.id == action.id) {
+              todo.content = action.content
+            }
+          })
+        })
+      }
+
+      const store = Redux.createStore((state, action) => {
+        var mutation = mutations[action.type]
+
+        if(mutation) {
+          return mutation(state, action)
+        } else {
+          return state
+        }
+      }, state)
+
+      var mapStateToPropsItem = (state) => {
+        return {}
+      }
+
+      var mapDispatchToPropsItem = (dispatch) => {
+        return {
+          changeState: (id) => dispatch({type: 'changeState', id}),
+          delTodo: (id) => dispatch({type: 'delTodo', id}),
+          changeContent: (id, content) => dispatch({type: 'changeContent', id, content})
+        }
+      }
+      
+      const TodoItem = connect(mapStateToPropsItem, mapDispatchToPropsItem)(class TodoItem extends React.Component {
+        constructor(props) {
+          super(props)
+          this.state = {
+            editing: false,
+          }
+
+          this.textRef = React.createRef()
+        }
+
+        componentDidUpdate() {
+          if(this.state.editing) {
+            this.textRef.current.focus()
+            this.textRef.current.selectionStart = this.textRef.current.selectionEnd
+          }
+        }
+
+        editContent = () => {
+          this.setState({
+            editing: true
+          })
+        }
+
+        changeContent = (id, e) => {
+          var content = e.target.value
+          
+          if(content.trim() && (e.key == 'Enter' || e.key == 'Escape' || e.type == 'blur')) {
+            this.props.changeContent(id, content)
+
+            this.setState({
+              editing: false
+            })
+          }
+
+          if(!content.trim()) {
+            this.props.delTodo(id)
+          }
+        }
+
+        render() {
+          return (
+            <li className={ [this.props.todo.completed ? 'completed': '', this.state.editing ? 'editing' : ''].join(' ') }>
+              <div className="view">
+                <input onChange={() => this.props.changeState(this.props.todo.id)} checked={this.props.todo.completed} type="checkbox" className="toggle" />
+                <label onDoubleClick={ this.editContent } > { this.props.todo.content } </label>
+                <button  onClick={ () => this.props.delTodo(this.props.todo.id) } className="destory"></button>
+              </div>
+              <input 
+                className="edit"
+                type="text"
+                defaultValue={ this.props.todo.content }
+                ref={ this.textRef  }
+                onBlur={ (e) =>  this.changeContent(this.props.todo.id, e) }
+                onKeyDown={ (e) =>  this.changeContent(this.props.todo.id, e)  } 
+              />
+            </li>
+          )
+        }
+      })
+
+
+      var mapStateToProps = (state) => {
+        return {
+          todos: state.todos,
+          visibility: state.visibility,
+          filterTodo: () => filterTodo(state.todos, state.visibility),
+          isToggleAll: () => isToggleAll(state.todos),
+          leftCount: () => state.todos.filter(todo => !todo.completed).length,
+        }
+      }
+
+      var mapDispatchToProps = (dispatch) => {
+        return {
+          addTodo: (e) => {
+            if(e.key == 'Enter' || e.type == "blur") {
+              var content = e.target.value.trim()
+
+              if(content) {
+                var newTodo = {
+                  content,
+                  completed: false,
+                  id: Date.now()
+                }
+
+                dispatch({type: 'addTodo', newTodo})
+                e.target.value = ''
+              }
+
+            }
+          },
+          toggleAll: () => dispatch({type: 'toggleAll'}),
+          changeCategory: (category) => dispatch({type: 'changeCategory', category}),
+          clearCompleted: () => dispatch({type: 'clearCompleted'})
+        }
+      } 
+
+      const TodoApp = connect(mapStateToProps, mapDispatchToProps)(function TodoApp(props) {
+        console.log(props.todos)
+        return (
+          <section className="todoapp" id="todoapp">
+            <header className="header">
+              <h1>todos6</h1>
+              <input onKeyDown={  props.addTodo  } onBlur={  props.addTodo  } type="text" autoFocus className="new-todo" placeholder="What needs to be done?" />
+            </header>
+            <div className="main">
+              <input 
+                checked={  props.todos.length && props.isToggleAll()  } 
+                onChange={  props.toggleAll  } 
+                id="toggle-all" type="checkbox" className="toggle-all" 
+              />
+              <label htmlFor="toggle-all" style={ {display: props.todos.length > 0 ? 'block' : 'none'} }></label>
+              
+              <ul className="todo-list">
+              {
+                props.filterTodo(props.todos).map(todo => {
+                  return (
+                    <TodoItem todo={todo} key={todo.id}/>
+                  )
+                })
+              }
+              </ul>
+            </div>
+
+            <footer className="footer" style={  {display: props.todos.length > 0 ? 'block' : 'none'} }>
+              <span className="todo-count">
+                <span>{ props.leftCount()  }</span> item{props.leftCount() > 1 ? 's' : ''} left
+              </span>
+              <ul className="filters">
+                <li>
+                  <a href="#/" onClick={() => props.changeCategory('all')} className={props.visibility == 'all' ? 'selected' : ''}>All</a>
+                </li>
+                <li>
+                  <a href="#/active" onClick={() => props.changeCategory('active')} className={props.visibility == 'active' ? 'selected' : ''}>Active</a>
+                </li>
+                <li>
+                  <a href="#/completed"  onClick={() => props.changeCategory('completed')} className={props.visibility == 'completed' ? 'selected' : ''}>Completed</a>
+                </li>
+              </ul>
+              <button 
+                style={ {display: props.todos.filter(it => it.completed).length > 0 ? 'block' : 'none' } } 
+                className="clear-completed"
+                onClick={props.clearCompleted}
+              >
+                Clear completed
+              </button>
+            </footer>
+
+          </section>
+        )
+      })
+
+      const TodoAppWrap = function TodoAppWrap() {
+        return (
+          <Provider store={store}>
+            <TodoApp />
+          </Provider>
+        )
+      }
+
+      ReactDOM.render(
+        <TodoAppWrap />,
+        document.getElementById('root')
+      );
+
+    </script>
+    <!--
+      Note: this page is a great way to try React but it's not suitable for production.
+      It slowly compiles JSX with Babel in the browser and uses a large development build of React.
+
+      Read this section for a production-ready setup with JSX:
+      https://reactjs.org/docs/add-react-to-a-website.html#add-jsx-to-a-project
+
+      In a larger project, you can use an integrated toolchain that includes JSX instead:
+      https://reactjs.org/docs/create-a-new-react-app.html
+
+      You can also use React without JSX, in which case you can remove Babel:
+      https://reactjs.org/docs/react-without-jsx.html
+    -->
+  </body>
+</html>

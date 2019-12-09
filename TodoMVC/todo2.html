@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="./todo.css">
+  <title>Todo</title>
+</head>
+<body>
+
+  <section class="todoapp"></section>
+
+  <footer class="info">
+    <p>Double-click to edit a todo</p>
+  </footer>
+
+  <script>
+    var todos2 = JSON.parse(localStorage.getItem('todos2')) || []
+    var category = JSON.parse(localStorage.getItem('category')) || 'all'
+
+    var todoApp = document.querySelector('.todoapp')
+    var editing = -1
+    
+    render()
+    
+    function render() {
+      saveToStorage()
+
+      var html = `
+      <header class="header">
+        <h1>todos2</h1>
+        <input autofocus type="text" class="new-todo" placeholder="What needs to be done?">
+      </header>  
+
+      <div class="main">
+        <input type="checkbox" class="toggle-all" ${todos2.length && todos2.every(todo => todo.completed) ? 'checked' : ''}>
+        <label for="toggle-all"></label>
+        <ul class="todo-list">
+          ${
+            todos2.filter((todo) => showing(todo)).map((todo, idx) => {
+              return `
+              <li data-idx="${idx}" class="${todo.completed ? 'completed' : ''} ${
+                idx == editing ? 'editing' : ''}">
+                <div class="view">
+                  <input type="checkbox" class="toggle" ${todo.completed ? 'checked' : ''}>
+                  <label>${todo.content}</label>
+                  <button class="destory"></button>
+                </div>
+                <input class="edit" type="text" value="${todo.content}">
+              </li>
+              `
+            }).join('')
+          }  
+        </ul>
+      </div>
+
+      <footer class="footer" style="display: ${todos2.length ? '' : 'none'}">
+        <span class="todo-count"><span>${todos2.filter(todo => !todo.completed).length}</span> item${
+          todos2.filter(todo => !todo.completed).length > 1 ? 's' : ''
+        } left</span>
+
+        <div class="filters">
+          <input type="radio" name="category" id="all" ${category == 'all' ? 'checked' : ''}>
+          <label for="all" class="${category == 'all' ? 'selected' : ''}">All</label>
+          <input type="radio" name="category" id="active" ${category == 'active' ? 'checked' : ''}>
+          <label for="active" class="${category == 'active' ? 'selected' : ''}">Active</label>
+          <input type="radio" name="category" id="completed" ${category == 'completed' ? 'checked' : ''}>
+          <label for="completed" class="${category == 'completed' ? 'selected' : ''}">Completed</label>
+        </div>
+
+        ${
+          todos2.some(todo => todo.completed) ? `<button class="clear-completed">Clear completed</button>` : ''
+        }
+        
+      </footer>
+      `
+      todoApp.innerHTML = html
+    }
+
+    function saveToStorage() {
+      localStorage.setItem('todos2', JSON.stringify(todos2))
+      localStorage.setItem('category', JSON.stringify(category))
+    }
+
+    function showing(todo) {
+      if(category == 'all') {
+        return true
+      }
+      if(category == 'active') {
+        return !todo.completed
+      }
+      if(category == 'completed') {
+        return todo.completed
+      }
+    }
+
+    //add new todo
+    todoApp.addEventListener('keyup', (e) => {
+      if(e.target.matches('.new-todo') && e.keyCode == 13) {
+        var value = e.target.value.trim()
+        if(!value) {return}
+        todos2.push({
+          content: value,
+          completed: false,
+        })
+
+        render()
+
+        document.querySelector('.new-todo').focus()
+      }
+
+      if(e.target.matches('.editing .edit') && e.keyCode == 13) {
+        e.target.blur()
+      }
+    })
+    
+    //completed or no
+    todoApp.addEventListener('click', function(e) {
+      if(e.target.matches('.todo-list .view .toggle')) {
+        var idx = e.target.parentElement.parentElement.dataset['idx']
+        todos2.filter((_, index) => index == idx).forEach(todo => {
+          todo.completed = !todo.completed
+        })
+        
+        render()
+      }
+    })
+
+    //delete todo
+    todoApp.addEventListener('click', (e) => {
+      if(e.target.matches('.todo-list .destory')) {
+        var idx = e.target.parentElement.parentElement.dataset['idx']
+        var relIdx = idx
+        var count = -1
+
+        for(var i = 0; i < todos2.length; i++) {
+          var todo = todos2[i]
+          if(category == 'active' && !todo.completed) {
+            count++
+          } else if(category == 'completed' && todo.completed) {
+            count++
+          } else if(category == 'all') {
+            break
+          }
+          if(count == idx) {
+            relIdx = i
+            break
+          }
+        }
+
+        todos2.splice(relIdx, 1)
+        
+        render()
+      }  
+    })
+
+    //toggle-all 
+    todoApp.addEventListener('click', (e) => {
+      if(e.target.matches('.main .toggle-all + label')) {
+        if(todos2.some(todo => !todo.completed)) {
+          todos2.forEach(todo => todo.completed = true)
+        }else {
+          todos2.forEach(todo => todo.completed = false)
+        }
+
+        render()
+      }  
+    })
+
+    //change category
+    todoApp.addEventListener('click', (e) => {
+      if(e.target.matches('.filters label')) {
+        category = e.target.getAttribute('for')
+        
+        render()
+      }  
+    })
+
+    //clear completed btn
+    todoApp.addEventListener('click', (e) => {
+      if(e.target.matches('.footer button.clear-completed')) {
+        
+        todos2.reduceRight((memo, todo, index) => {
+          if(todo.completed) {
+            todos2.splice(index, 1)
+          }
+        }, null)
+        
+        render()
+      }  
+    })
+
+    //edit
+    todoApp.addEventListener('dblclick', (e) => {
+      if(e.target.matches('.view > label')) {
+        var idx = e.target.parentElement.parentElement.dataset['idx']
+
+        editing = idx
+        
+        render()
+
+        var edit = document.querySelector('.editing .edit')
+        edit.focus()
+        edit.selectionStart = edit.selectionEnd = edit.value.length
+      }  
+    })
+
+    todoApp.addEventListener('focusout', (e) => {
+      if(e.target.matches('.editing .edit')) {
+        editing = -1
+        var text = e.target.value
+        var idx = e.target.parentElement.dataset['idx']
+
+        todos2.filter((todo) => showing(todo)).forEach((todo, index) => {
+          if(index == idx) {
+            todo.content = text
+          }
+        })
+        
+        render()
+      }  
+    })
+
+  </script>
+  
+</body>
+</html>

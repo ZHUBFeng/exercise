@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="./todo.css">
+  <script src="./js/vue.js"></script>
+  <title>Todo</title>
+</head>
+
+<body>
+
+  <section class="todoapp" id="todoapp">
+    <header class="header">
+      <h1>todos3</h1>
+      <input autofocus type="text" class="new-todo" placeholder="What needs to be done?" @keyup.enter="addToDo" @blur="addToDo">
+    </header>
+
+    <div class="main">
+      <input type="checkbox" class="toggle-all" :checked="isToggleAll">
+      <label for="toggle-all"></label>
+
+      <ul class="todo-list" >
+        <li v-for="(todo, idx) in showing" :key="todo.id" :data-idx="idx" :class="{completed: todo.completed, editing: idx == editing}">
+          <div class="view">
+            <input type="checkbox" class="toggle" :checked="todo.completed" @click="completeToDo(todo)">
+            <label @dblclick="editContent">{{ todo.content }}</label>
+            <button class="destory" @click="deleteToDo(todo)"></button>
+          </div>
+          <input class="edit" type="text" :value="todo.content" @blur="changeContent($event, todo)" @keyup.enter="changeContent($event, todo)">
+        </li>
+      </ul>
+
+    </div>
+
+    <footer class="footer" v-if="todos3.length">
+      <span class="todo-count"><span>{{ leftCount }}</span> 
+      item{{ plurality }} left</span>
+
+      <div class="filters">
+        <input type="radio" name="category" id="all" :checked="category=='all'">
+        <label for="all" :class="{selected : category == 'all'}"  @click=" category = 'all'">All</label>
+        <input type="radio" name="category" id="active" :checked="category=='active'">
+        <label for="active" :class="{selected : category == 'active'}"  @click=" category = 'active'">Active</label>
+        <input type="radio" name="category" id="completed" :checked="category=='completed'">
+        <label for="completed" :class="{selected : category == 'completed'}"  @click=" category = 'completed'">Completed</label>
+      </div>
+
+      <button class="clear-completed" v-if="todos3.some(todo => todo.completed)" @click="clearCompleted">Clear completed</button>
+
+    </footer>
+  </section>
+
+  <footer class="info">
+    <p>Double-click to edit a todo</p>
+  </footer>
+
+  <script>
+    var app = new Vue({
+      el: '#todoapp',
+      data: {
+        editing: -1,
+        todos3: JSON.parse(localStorage.getItem('todos3')) || [],
+        category: JSON.parse(localStorage.getItem('category')) || 'all',
+      },
+      methods: {
+        saveToStorage () {
+          localStorage.setItem('todos3', JSON.stringify(this.todos3))
+          localStorage.setItem('category', JSON.stringify(this.category))
+        },
+        addToDo(e) {
+          var value = e.target.value.trim()
+          if(value) {
+            this.todos3.push({
+              content: value,
+              completed: false,
+              id: Date.now()
+            })
+            e.target.value = ''
+            this.saveToStorage()
+          }
+        },
+        deleteToDo(todo) {
+          this.todos3 = this.todos3.filter(it => it != todo)
+          this.saveToStorage()
+        },
+        completeToDo(todo) {
+          todo.completed = !todo.completed
+          this.saveToStorage()
+        },
+        clearCompleted() {
+          this.todos3 = this.todos3.filter(todo => !todo.completed)
+          this.saveToStorage()
+        },
+        async editContent(e) {
+          var idx = e.target.parentElement.parentElement.dataset['idx']
+          this.editing = idx
+
+          await this.$nextTick()
+          
+          var edit = document.querySelector('.editing .edit')
+          edit.focus()
+          edit.selectionStart = edit.selectionEnd = edit.value.length
+        },
+        changeContent(e, todo) {
+          this.editing = -1
+          var text = e.target.value
+          var idx = e.target.parentElement.dataset['idx']
+          if(text) {
+            if(text != todo.content) {
+              todo.content = text
+              this.saveToStorage()
+            }
+          } else {
+            this.deleteToDo(todo)
+          }
+        }
+      },
+      computed: {
+        isToggleAll() {
+          return this.todos3.length && this.todos3.every(todo => todo.completed)
+        },
+        showing() {
+          if (this.category == 'all') {
+            return this.todos3
+          }
+          if (this.category == 'active') {
+            return this.todos3.filter(todo => !todo.completed)
+          }
+          if (this.category == 'completed') {
+            return this.todos3.filter(todo => todo.completed)
+          }
+        },
+        leftCount() {
+          return this.todos3.filter(todo => !todo.completed).length
+        },
+        plurality() {
+          return this.todos3.filter(todo => !todo.completed).length > 1 ? 's' : ''
+        }
+      },
+    })
+
+  </script>
+
+</body>
+
+</html>

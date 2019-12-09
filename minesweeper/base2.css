@@ -95,7 +95,7 @@ html {
   content: '';
   display: inline-block;
   vertical-align: middle;
-  background-color: rgb(0, 0, 0, 0.05);
+  background-color: rgba(0, 0, 0, 0.05);
   position: absolute;
   top: 0;
   left: 0;
@@ -104,7 +104,7 @@ html {
 #board .row:nth-child(2n) span:not(.circle):not(.falseFlag):nth-child(2n)::before {
   content: '';
   display: inline-block;
-  background-color: rgb(0, 0, 0, 0.05);
+  background-color: rgba(0, 0, 0, 0.05);
   position: absolute;
   top: 0;
   left: 0;
@@ -189,7 +189,7 @@ html {
   width: 20px;
   height: 20px;
   border-radius: 100%;
-  background-color: rgb(255, 0, 0, 0.6);
+  background-color: rgba(255, 0, 0, 0.6);
   right: 0;
   left: 0;
   top: 0;
@@ -215,9 +215,8 @@ html {
 }
 
 .dialog {
-  cursor: pointer;
-  background: rgb(0, 0, 0, 0.7);
-  box-shadow: 0 0 999px 999px rgb(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.7);
+  box-shadow: 0 0 999px 999px rgba(0, 0, 0, 0.7);
   font-size: 18px;
   position: absolute;
   text-align: center;

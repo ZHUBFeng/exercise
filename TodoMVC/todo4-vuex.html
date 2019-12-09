@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>todo-vuex</title>
+  <link rel="stylesheet" href="./todo.css">
+  <script src="./js/vue.js"></script>
+  <script src="./js/vuex.js"></script>
+</head>
+<body>
+  <div id="app">
+    <todo-app></todo-app>
+  </div>
+
+  <script>
+    const store = new Vuex.Store({
+      state: {
+        todos: [{
+          content: 'abc',
+          completed: false,
+          id: Date.now()
+        },{
+          content: '555',
+          completed: true,
+          id: Date.now() + 1
+        }],
+        category: 'all',
+      },
+      mutations: {
+        newTodo(state, todo) {
+          state.todos.push({
+            content: todo,
+            completed: false,
+            id: Date.now()
+          })
+        },
+        changeState(state, todo) {
+          todo.completed = !todo.completed
+        },
+        deleteToDo(state, id) {
+          state.todos = state.todos.filter(it => it.id !== id)
+        },
+        toggleAll(state) {
+          if(state.todos.every(todo => todo.completed)) {
+            state.todos.forEach(todo => {
+              todo.completed = false
+            })
+          } else {
+            state.todos.forEach(todo => {
+              todo.completed = true
+            })
+          }
+        },
+        clearCompleted(state) {
+          state.todos = state.todos.filter(todo => !todo.completed)
+        },
+        changeCategory(state, category) {
+          if(category == 'all') {
+            state.category = 'all'
+          } else if(category == 'active') {
+            state.category = 'active'
+          } else {
+            state.category = 'completed'
+          }
+        },
+        editContent(state, {todo, content}) {
+          todo.content = content
+        }
+      },
+      getters: {
+        filterTodos(state) {
+          if(state.category == 'all') {
+            return state.todos
+          } else if (state.category == 'active') {
+            return state.todos.filter(todo => !todo.completed)
+          } else {
+            return state.todos.filter(todo => todo.completed)
+          }
+        }
+      }
+    })
+
+    Vue.component('todo-header', {
+      data() {
+        return {
+          todoText: ''
+        }
+      },
+      template: `
+        <header class="header">
+          <h1>todos4</h1>
+          <input 
+            autofocus 
+            type="text" 
+            placeholder="What needs to be done?" 
+            class="new-todo"
+            v-model.trim="todoText"
+            @keyup.enter="addToDo"
+          />
+        </header>
+      `,
+      methods: {
+        addToDo() {
+          if(this.todoText) {
+            this.$store.commit('newTodo', this.todoText)
+            this.todoText = ''
+          }
+        },
+      }
+    })
+
+    Vue.component('todo-main', {
+      template: `
+        <div class="main">
+          <input 
+            type="checkbox" 
+            class="toggle-all" 
+            :checked="todos.every(todo => todo.completed)"
+          />
+          <label for="toggle-all" @click="toggleAll" v-show="todos.length > 0"></label>
+          <ul class="todo-list">
+            <todo-item v-for="todo in filterTodos" :key="todo.id" :todo="todo"></todo-item>
+          </ul>
+        </div>
+      `,
+      methods: {
+        toggleAll() {
+          return this.$store.commit('toggleAll')
+        }
+      },
+      computed: {
+        filterTodos() {
+          return this.$store.getters.filterTodos
+        },
+        todos() {
+          return this.$store.state.todos
+        }
+      }
+    })
+
+    Vue.component('todo-item', {
+      props:['todo'],
+      data() {
+        return {
+          editing: null
+        }
+      },
+      template: `
+        <li :class="{completed: todo.completed, editing: editing == todo.id}" :id="todo.id">
+          <div class="view">
+            <input 
+              type="checkbox" 
+              class="toggle" 
+              :checked="todo.completed"
+              @click="changeState"
+            />
+            <label @dblclick="editToDo">{{  todo.content }}</label>
+            <button class="destory" @click="deleteToDo"></button>
+          </div>
+          <input type="text" class="edit" :value="todo.content" @keyup.enter="editContent" @blur="editContent"/>
+        </li>
+      `,
+      methods: {
+        changeState() {
+          this.$store.commit('changeState', this.todo)
+        },
+        deleteToDo() {
+          this.$store.commit('deleteToDo', this.todo.id)
+        },
+        async editToDo(e) {
+          this.editing = this.todo.id
+
+          await this.$nextTick()
+          var edit = document.querySelector('.editing .edit')
+          edit.focus()
+          edit.selectionStart = edit.selectionEnd = edit.value.length
+        },
+        editContent(e) {
+          var content = e.target.value.trim()
+          if(content) {
+            if(content !== this.todo.content) {
+              this.$store.commit('editContent', {todo: this.todo, content})
+            }
+          } else if(!content){
+            this.$store.commit('deleteToDo', this.todo.id)
+          }
+          this.editing = null
+        }
+      },
+    })
+
+    Vue.component('todo-footer', {
+      data() {
+        return {
+          visibility: 'all',
+          categories: ['all', 'active', 'completed'],
+        }
+      },
+      template: `
+        <footer class="footer">
+          <span class="todo-count">
+            <span> {{ leftCount  }} </span>{{ leftCount | pluralize('item') }} left
+          </span>
+          <ul class="filters">
+            <li v-for="val in categories">
+              <a :href="'#/' + val" @click="changeCategory(val)" :class="{selected: visibility == val}">
+                {{val | capitalize}}
+              </a>
+            </li>
+          </ul>
+          <button class="clear-completed" @click="clearCompleted" v-show="showClearBtn">Clear completed</button>
+        </footer>
+      `,
+      computed: {
+        leftCount() {
+          return this.$store.state.todos.filter(todo => !todo.completed).length
+        },
+        showClearBtn() {
+          if(this.$store.state.todos.filter(todo => todo.completed).length) {
+            return true
+          }
+          return false
+        }
+      },
+      methods: {
+        clearCompleted() {
+          this.$store.commit('clearCompleted')
+        },
+        changeCategory(category) {
+          this.visibility = category
+          this.$store.commit('changeCategory', category)
+        }
+      },
+      filters: {
+        pluralize: (n, w) => n > 1 ? (w + 's') : w,
+        capitalize: s => s.charAt(0).toUpperCase() + s.slice(1)
+      }
+    })
+
+    var app = new Vue({
+      el: '#app',
+      store,
+      template: `
+        <div id="todoapp" class="todoapp">
+          <todo-header></todo-header>
+          <todo-main></todo-main>
+          <todo-footer v-show="todos.length > 0"></todo-footer>
+        </div>
+      `,
+      computed: {
+        todos() {
+          return this.$store.state.todos
+        }
+      }
+    })
+    
+  </script>
+  
+</body>
+</html>

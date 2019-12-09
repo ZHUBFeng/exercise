@@ -417,18 +417,18 @@
 
         if(this.state.m.board[cx][cy] === 'E' || this.state.m.board[cx][cy] === 'M') {
 
-          if(this.state.firstClick) {
+          // if(this.state.firstClick) {
             this.setState(produce(state => {
               state.m.updateBoard(cx, cy)
               state.clickCount = state.clickCount + 1
             }))
-          } else {
-            this.state.m.updateBoard(cx, cy)
-            this.setState(produce(state => {
-              state.clickCount = state.clickCount + 1
-            }))
+          // } else {
+          //   this.state.m.updateBoard(cx, cy)
+          //   this.setState(produce(state => {
+          //     state.clickCount = state.clickCount + 1
+          //   }))
 
-          }
+          // }
           this.test(cx, cy)
         }
       }
@@ -622,10 +622,9 @@
       }
 
       changeStatus = (status) => {
-        this.setState({
-          ...this.state,
-          status,
-        })
+        this.setState(produce(state => {
+          state.status = status
+        }))
 
         if(status === 'victory') {
           this.setState(produce(state => {
@@ -688,10 +687,10 @@
       }
 
       changeLeftMineCount = (val) => {
-        this.setState({
-          ...this.state,
-          leftMineCount: this.state.leftMineCount + val
-        })
+
+        this.setState(produce(state => {
+          state.leftMineCount += val
+        }))
       }
 
       clear = () => {
